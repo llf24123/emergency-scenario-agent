@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from .engine import SimulationEngine
 from .models import MarkdownReport, ScenarioCatalog, ScenarioInput, SimulationReport
 
-app = FastAPI(title='应急场景推演Agent', version='1.2.0')
+app = FastAPI(title='应急场景推演Agent', version='1.3.0')
 engine = SimulationEngine()
 frontend_dir = Path(__file__).parent / 'frontend'
 app.mount('/static', StaticFiles(directory=frontend_dir), name='static')
@@ -33,6 +33,17 @@ def catalog() -> ScenarioCatalog:
 @app.post('/simulate', response_model=SimulationReport)
 def simulate(payload: ScenarioInput) -> SimulationReport:
     return engine.run(payload)
+
+
+@app.post('/simulate/llm', response_model=SimulationReport)
+def simulate_with_llm(payload: ScenarioInput) -> SimulationReport:
+    return engine.run_with_llm(payload)
+
+
+@app.post('/simulate/llm/markdown', response_model=MarkdownReport)
+def simulate_llm_markdown(payload: ScenarioInput) -> MarkdownReport:
+    report = engine.run_with_llm(payload)
+    return engine.render_markdown_response(report)
 
 
 @app.post('/simulate/markdown', response_model=MarkdownReport)

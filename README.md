@@ -2,7 +2,7 @@
 
 一个面向 **消防 / 应急 / 安全处置** 场景的多 Agent 推演系统。它将输入的事故信息结构化后，交给多个职责清晰的 Agent 协同分析，输出可直接用于汇报、值守研判、演练准备或系统集成的推演结果。
 
-> 当前版本：**v1.2.0**
+> 当前版本：**v1.3.0**
 
 ---
 
@@ -18,6 +18,7 @@
 - **支持 API 与 CLI 双入口**
 - **内置 Web 前端控制台**，可直接填写场景并查看结果
 - **支持 JSON / Markdown 两种输出**
+- **支持大模型增强模式**，可补充指挥简报、资源优化和对外沟通建议
 - **内置场景目录接口**，方便前端或第三方系统对接
 - **内置测试、Dockerfile、GitHub Actions CI**
 
@@ -109,7 +110,9 @@ python3 -m uvicorn emergency_scenario_agent.api:app --host 0.0.0.0 --port 8000
 - 健康检查：`GET /health`
 - 场景目录：`GET /catalog`
 - JSON 推演：`POST /simulate`
+- LLM 增强推演：`POST /simulate/llm`
 - Markdown 推演：`POST /simulate/markdown`
+- LLM 增强 Markdown：`POST /simulate/llm/markdown`
 - Swagger 文档：`http://127.0.0.1:8000/docs`
 
 ### 前端控制台说明
@@ -140,7 +143,15 @@ curl -X POST http://127.0.0.1:8000/simulate \
   -d @examples/high_rise_fire.json
 ```
 
-### 3）生成 Markdown 推演报告
+### 3）生成 LLM 增强推演报告
+
+```bash
+curl -X POST http://127.0.0.1:8000/simulate/llm \
+  -H 'Content-Type: application/json' \
+  -d @examples/high_rise_fire.json
+```
+
+### 4）生成 Markdown 推演报告
 
 ```bash
 curl -X POST http://127.0.0.1:8000/simulate/markdown \
@@ -184,6 +195,36 @@ python3 -m emergency_scenario_agent.cli \
 
 ---
 
+## 大模型配置
+
+默认情况下，系统会优先读取以下环境变量：
+
+- `SCENARIO_AGENT_LLM_ENABLED`
+- `SCENARIO_AGENT_LLM_MODEL`
+- `SCENARIO_AGENT_LLM_BASE_URL`
+- `SCENARIO_AGENT_LLM_API_KEY`
+- `SCENARIO_AGENT_LLM_TIMEOUT`
+
+如果这些变量未配置，系统会尝试回退读取 `~/.hermes/config.yaml` 中的主模型配置，并以 OpenAI 兼容 `/chat/completions` 协议调用。
+
+### 示例
+
+```bash
+export SCENARIO_AGENT_LLM_ENABLED=true
+export SCENARIO_AGENT_LLM_MODEL=gpt-5.4
+export SCENARIO_AGENT_LLM_BASE_URL=https://your-openai-compatible-endpoint/v1
+export SCENARIO_AGENT_LLM_API_KEY=sk-xxxx
+```
+
+### 回退策略
+
+- 大模型调用成功：返回 `llm_status = enhanced`
+- 大模型调用失败：自动回退规则推演，返回 `llm_status = fallback`
+
+这意味着即使上游模型偶发超时，系统也能继续输出可用结果。
+
+---
+
 ## 设计架构
 
 ### Agent 分工
@@ -195,6 +236,7 @@ python3 -m emergency_scenario_agent.cli \
 - `CommunicationAgent`：生成通信与指挥链建议
 - `TimelineAgent`：生成分钟级推演时间线
 - `SimulationEngine`：编排多个 Agent 并输出报告
+- `OpenAICompatibleLLMClient`：在增强模式下生成指挥简报、资源优化和对外沟通建议
 
 ### 为什么这样设计
 

@@ -70,3 +70,74 @@ def test_frontend_javascript_is_served():
     assert response.status_code == 200
     assert 'application/javascript' in response.headers['content-type'] or 'text/javascript' in response.headers['content-type']
     assert 'simulate' in response.text
+
+
+def test_simulate_llm_endpoint_returns_enhanced_payload(monkeypatch):
+    from emergency_scenario_agent import api as api_module
+    from emergency_scenario_agent.models import LLMEnhancement
+
+    def fake_run_with_llm(payload):
+        report = api_module.engine.run(payload)
+        report.llm_status = 'enhanced'
+        report.llm_enhancement = LLMEnhancement(
+            executive_summary='增强版摘要',
+            command_brief=['建议单点突破'],
+            resource_optimization=['优先部署通信中继'],
+            public_communication=['统一对外发布口径'],
+        )
+        return report
+
+    monkeypatch.setattr(api_module.engine, 'run_with_llm', fake_run_with_llm)
+    payload = {
+        "scenario_type": "high_rise_fire",
+        "location_type": "residential_tower",
+        "severity": "high",
+        "weather": "windy",
+        "time_of_day": "night",
+        "people_trapped": 6,
+        "floors_affected": [18, 19],
+        "hazards": ["smoke"],
+        "available_resources": ["fire_robot", "mesh_radio"]
+    }
+
+    response = client.post('/simulate/llm', json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['llm_status'] == 'enhanced'
+    assert data['llm_enhancement']['executive_summary'] == '增强版摘要'
+
+
+
+def test_simulate_llm_markdown_endpoint_returns_enhanced_markdown(monkeypatch):
+    from emergency_scenario_agent import api as api_module
+    from emergency_scenario_agent.models import LLMEnhancement
+
+    def fake_run_with_llm(payload):
+        report = api_module.engine.run(payload)
+        report.llm_status = 'enhanced'
+        report.llm_enhancement = LLMEnhancement(
+            executive_summary='增强版摘要',
+            command_brief=['建议单点突破'],
+            resource_optimization=['优先部署通信中继'],
+            public_communication=['统一对外发布口径'],
+        )
+        return report
+
+    monkeypatch.setattr(api_module.engine, 'run_with_llm', fake_run_with_llm)
+    payload = {
+        "scenario_type": "high_rise_fire",
+        "location_type": "residential_tower",
+        "severity": "high",
+        "weather": "windy",
+        "time_of_day": "night",
+        "people_trapped": 6,
+        "floors_affected": [18, 19],
+        "hazards": ["smoke"],
+        "available_resources": ["fire_robot", "mesh_radio"]
+    }
+
+    response = client.post('/simulate/llm/markdown', json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['format'] == 'markdown'
+    assert '大模型增强建议' in data['content']

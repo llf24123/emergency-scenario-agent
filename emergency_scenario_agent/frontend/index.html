@@ -185,6 +185,10 @@
             <button type="button" class="ghost" id="load-highrise">载入高层火灾示例</button>
             <button type="button" class="ghost" id="load-chemical">载入危化泄漏示例</button>
           </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+            <input id="use_llm" name="use_llm" type="checkbox" checked style="width:auto;accent-color:#7170ff;" />
+            <label for="use_llm" style="margin:0;color:var(--text);font-size:14px;">启用大模型增强（生成指挥简报 / 资源优化 / 对外沟通建议）</label>
+          </div>
           <div id="status" class="status">等待输入并生成。</div>
         </form>
       </div>
@@ -230,6 +234,20 @@
               <button type="button" class="ghost" id="download-markdown">下载 .md</button>
             </div>
             <div class="markdown" id="markdown-output">还没有生成 Markdown 报告。</div>
+          </div>
+
+          <div class="output-card">
+            <h3>大模型增强</h3>
+            <div class="meta">
+              <div class="box"><div class="k">LLM 状态</div><div class="v" id="llm-status">未启用</div></div>
+              <div class="box"><div class="k">增强摘要</div><div class="v" id="llm-summary">—</div></div>
+              <div class="box"><div class="k">对外沟通</div><ul class="list" id="llm-public-list"></ul></div>
+            </div>
+            <div class="meta" style="margin-top:10px;">
+              <div class="box"><div class="k">指挥简报</div><ul class="list" id="llm-command-list"></ul></div>
+              <div class="box"><div class="k">资源优化</div><ul class="list" id="llm-resource-list"></ul></div>
+              <div class="box"><div class="k">说明</div><div class="v">未启用或调用失败时，系统会自动回退到规则引擎结果。</div></div>
+            </div>
           </div>
 
           <div class="output-card">

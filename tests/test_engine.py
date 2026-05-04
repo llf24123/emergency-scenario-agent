@@ -67,3 +67,59 @@ def test_report_can_render_markdown():
     assert "地铁火灾" in markdown
     assert "## 行动计划" in markdown
     assert "## 时间线" in markdown
+
+
+class FakeLLMClient:
+    def enhance_report(self, scenario, report):
+        return {
+            "executive_summary": "大模型增强摘要",
+            "command_brief": ["建议建立单一指挥链", "加强高风险区轮换"],
+            "resource_optimization": ["优先前推通信中继"],
+            "public_communication": ["对外统一口径，避免恐慌"],
+        }
+
+
+class FailingLLMClient:
+    def enhance_report(self, scenario, report):
+        raise RuntimeError("llm offline")
+
+
+def test_llm_enhancement_can_be_attached_to_report():
+    engine = SimulationEngine(llm_client=FakeLLMClient())
+    scenario = ScenarioInput(
+        scenario_type="high_rise_fire",
+        location_type="residential_tower",
+        severity="high",
+        weather="windy",
+        time_of_day="night",
+        people_trapped=12,
+        floors_affected=[25, 26],
+        hazards=["smoke"],
+        available_resources=["fire_robot", "mesh_radio"],
+    )
+
+    report = engine.run_with_llm(scenario)
+
+    assert report.llm_enhancement is not None
+    assert report.llm_enhancement.executive_summary == "大模型增强摘要"
+    assert any("指挥链" in item for item in report.llm_enhancement.command_brief)
+
+
+def test_llm_failure_falls_back_to_rule_report():
+    engine = SimulationEngine(llm_client=FailingLLMClient())
+    scenario = ScenarioInput(
+        scenario_type="chemical_leak",
+        location_type="industrial_park",
+        severity="critical",
+        weather="rainy",
+        time_of_day="night",
+        people_trapped=1,
+        hazards=["toxic_gas"],
+        available_resources=["hazmat_team"],
+    )
+
+    report = engine.run_with_llm(scenario)
+
+    assert report.summary.scenario_type_label == "危化品泄漏"
+    assert report.llm_enhancement is None
+    assert report.llm_status == "fallback"

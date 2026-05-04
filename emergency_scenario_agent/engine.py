@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
+from .llm import OpenAICompatibleLLMClient
 from .models import (
     ActionPlan,
     CommunicationPlan,
+    LLMEnhancement,
     MarkdownReport,
     ResourcePlan,
     ScenarioCatalog,
@@ -205,17 +208,18 @@ class TimelineAgent:
 
 
 class SimulationEngine:
-    def __init__(self) -> None:
+    def __init__(self, llm_client: Any | None = None) -> None:
         self.risk_assessor = RiskAssessorAgent()
         self.strategy_agent = StrategyAgent()
         self.action_planner = ActionPlannerAgent()
         self.resource_planner = ResourcePlannerAgent()
         self.communication_agent = CommunicationAgent()
         self.timeline_agent = TimelineAgent()
+        self.llm_client = llm_client or OpenAICompatibleLLMClient()
 
     def get_catalog(self) -> ScenarioCatalog:
         return ScenarioCatalog(
-            version='1.1.0',
+            version='1.3.0',
             supported_scenarios=SCENARIO_LABELS,
             supported_resources=RESOURCE_LABELS,
             severity_levels=SEVERITY_LABELS,
@@ -252,6 +256,19 @@ class SimulationEngine:
             assumptions=assumptions,
         )
 
+    def run_with_llm(self, scenario: ScenarioInput) -> SimulationReport:
+        report = self.run(scenario)
+        try:
+            enhancement_payload = self.llm_client.enhance_report(scenario, report)
+        except Exception:
+            report.llm_status = 'fallback'
+            report.llm_enhancement = None
+            return report
+
+        report.llm_status = 'enhanced'
+        report.llm_enhancement = LLMEnhancement(**enhancement_payload)
+        return report
+
     def render_markdown(self, report: SimulationReport) -> str:
         sections = [
             '# 应急场景推演报告',
@@ -284,6 +301,15 @@ class SimulationEngine:
         sections.extend([f'- T+{step.minute} 分钟｜{step.owner}：{step.objective}' for step in report.timeline])
         sections.extend(['', '## 关键假设'])
         sections.extend([f'- {item}' for item in report.assumptions])
+        if report.llm_enhancement:
+            sections.extend(['', '## 大模型增强建议'])
+            sections.append(f'- 摘要：{report.llm_enhancement.executive_summary}')
+            sections.extend(['', '### 指挥简报'])
+            sections.extend([f'- {item}' for item in report.llm_enhancement.command_brief])
+            sections.extend(['', '### 资源优化'])
+            sections.extend([f'- {item}' for item in report.llm_enhancement.resource_optimization])
+            sections.extend(['', '### 对外沟通'])
+            sections.extend([f'- {item}' for item in report.llm_enhancement.public_communication])
         return '\n'.join(sections)
 
     def render_markdown_response(self, report: SimulationReport) -> MarkdownReport:

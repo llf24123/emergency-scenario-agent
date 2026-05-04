@@ -65,6 +65,15 @@ class SimulationReport(BaseModel):
     communication_plan: CommunicationPlan
     timeline: list[TimelineStep]
     assumptions: list[str]
+    llm_status: str = 'not_requested'
+    llm_enhancement: 'LLMEnhancement | None' = None
+
+
+class LLMEnhancement(BaseModel):
+    executive_summary: str
+    command_brief: list[str]
+    resource_optimization: list[str]
+    public_communication: list[str]
 
 
 class ScenarioCatalog(BaseModel):

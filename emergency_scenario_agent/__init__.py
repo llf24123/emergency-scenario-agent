@@ -3,5 +3,6 @@
 __all__ = [
     'api',
     'engine',
+    'llm',
     'models',
 ]

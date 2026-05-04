@@ -11,6 +11,12 @@ const markdownOutput = document.getElementById('markdown-output');
 const jsonOutput = document.getElementById('json-output');
 const scenarioSelect = document.getElementById('scenario_type');
 const supportedCount = document.getElementById('supported-count');
+const useLLM = document.getElementById('use_llm');
+const llmStatus = document.getElementById('llm-status');
+const llmSummary = document.getElementById('llm-summary');
+const llmCommandList = document.getElementById('llm-command-list');
+const llmResourceList = document.getElementById('llm-resource-list');
+const llmPublicList = document.getElementById('llm-public-list');
 
 const highRiseExample = {
   scenario_type: 'high_rise_fire',
@@ -90,14 +96,16 @@ async function fetchCatalog() {
 }
 
 async function simulate(payload) {
-  setStatus('正在生成推演结果...');
+  const endpoint = useLLM.checked ? '/simulate/llm' : '/simulate';
+  const markdownEndpoint = useLLM.checked ? '/simulate/llm/markdown' : '/simulate/markdown';
+  setStatus(useLLM.checked ? '正在生成大模型增强推演结果...' : '正在生成规则推演结果...');
   const [jsonRes, mdRes] = await Promise.all([
-    fetch('/simulate', {
+    fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }),
-    fetch('/simulate/markdown', {
+    fetch(markdownEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -120,9 +128,15 @@ async function simulate(payload) {
   renderList(resourceList, report.resource_plan.recommended_assets);
   renderList(commList, report.communication_plan.key_actions);
 
+  llmStatus.textContent = report.llm_status || 'not_requested';
+  llmSummary.textContent = report.llm_enhancement?.executive_summary || '当前未返回大模型增强摘要';
+  renderList(llmCommandList, report.llm_enhancement?.command_brief || []);
+  renderList(llmResourceList, report.llm_enhancement?.resource_optimization || []);
+  renderList(llmPublicList, report.llm_enhancement?.public_communication || []);
+
   markdownOutput.textContent = markdown.content;
   jsonOutput.textContent = JSON.stringify(report, null, 2);
-  setStatus('推演完成，可复制 Markdown 或继续修改场景。', true, false);
+  setStatus(useLLM.checked ? '推演完成，已尝试接入大模型增强。' : '规则推演完成。', true, false);
 }
 
 form.addEventListener('submit', async (event) => {
