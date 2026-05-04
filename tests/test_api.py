@@ -73,6 +73,9 @@ def test_frontend_homepage_is_served():
     assert '场景专属参数' in response.text
     assert '积水深度' in response.text
     assert '泄漏介质' in response.text
+    assert '运行总览' in response.text
+    assert '核心指标' in response.text
+    assert '指挥态势大屏' in response.text
 
 
 
@@ -89,6 +92,8 @@ def test_frontend_javascript_is_served():
     assert 'scenario-guidance-title' in response.text
     assert 'buildScenarioSpecificPayload' in response.text
     assert 'renderScenarioFields' in response.text
+    assert 'dashboard-kpi' in response.text
+    assert 'signal-card' in response.text
 
 
 

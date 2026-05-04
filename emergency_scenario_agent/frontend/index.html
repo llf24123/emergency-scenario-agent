@@ -78,6 +78,27 @@
     .mini-card .label { color: var(--soft); font-size: 12px; margin-bottom: 6px; }
     .mini-card .value { font-size: 20px; font-weight: 700; }
     .hero-side { padding: 24px; display: grid; gap: 12px; }
+    .dashboard-banner {
+      padding: 18px; border-radius: 18px; background: linear-gradient(135deg, rgba(64,169,255,0.18), rgba(108,99,255,0.16));
+      border: 1px solid rgba(130, 174, 255, 0.28);
+    }
+    .dashboard-banner h3 { margin: 0 0 8px; font-size: 18px; }
+    .dashboard-banner p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 13px; }
+    .dashboard-kpi-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    }
+    .dashboard-kpi {
+      padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .dashboard-kpi .k { color: var(--soft); font-size: 12px; }
+    .dashboard-kpi .v { margin-top: 8px; font-size: 20px; font-weight: 700; }
+    .signal-grid {
+      display: grid; gap: 12px;
+    }
+    .signal-card {
+      padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .signal-card strong { display: block; margin-bottom: 6px; }
     .status-board {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
     }
@@ -210,16 +231,27 @@
         </div>
       </div>
       <div class="panel hero-side">
-        <div class="panel-title"><h3>运行状态</h3><span class="subtle">面向实战演练与方案汇报</span></div>
+        <div class="dashboard-banner">
+          <h3>指挥态势大屏</h3>
+          <p>面向值守、演练、汇报与联调场景，集中展示核心指标、处置信号和关键风险。</p>
+        </div>
+        <div class="panel-title"><h3>运行总览</h3><span class="subtle">面向实战演练与方案汇报</span></div>
+        <div class="dashboard-kpi-grid">
+          <div class="dashboard-kpi"><div class="k">核心指标</div><div class="v" id="kpi-risk-count">0</div></div>
+          <div class="dashboard-kpi"><div class="k">推荐装备</div><div class="v" id="kpi-asset-count">0</div></div>
+          <div class="dashboard-kpi"><div class="k">任务分区</div><div class="v" id="kpi-zone-count">0</div></div>
+          <div class="dashboard-kpi"><div class="k">时间节点</div><div class="v" id="kpi-timeline-count">0</div></div>
+        </div>
         <div class="status-board">
           <div class="status-item"><div class="k">当前场景</div><div class="v" id="status-scenario">未加载</div></div>
           <div class="status-item"><div class="k">LLM 状态</div><div class="v" id="llm-status-hero">not_requested</div></div>
           <div class="status-item"><div class="k">被困人数</div><div class="v" id="hero-people">0 人</div></div>
           <div class="status-item"><div class="k">影响区域</div><div class="v" id="hero-affected">未录入</div></div>
         </div>
-        <div class="card">
-          <h4 style="margin-top:0;">当前说明</h4>
-          <div class="footer-note">未启用或调用失败时，系统会自动回退到规则推演结果，保证前端态势页仍可正常显示。</div>
+        <div class="signal-grid">
+          <div class="signal-card"><strong>风险信号</strong><div class="subtle" id="signal-risk">等待推演</div></div>
+          <div class="signal-card"><strong>资源信号</strong><div class="subtle" id="signal-resource">等待推演</div></div>
+          <div class="signal-card"><strong>指挥信号</strong><div class="subtle" id="signal-command">等待推演</div></div>
         </div>
       </div>
     </section>

@@ -20,6 +20,10 @@ const floorsGroup = document.getElementById('floors-group');
 const floorsLabel = document.getElementById('floors-label');
 const llmStatus = document.getElementById('llm-status');
 const llmStatusHero = document.getElementById('llm-status-hero');
+const kpiRiskCount = document.getElementById('kpi-risk-count');
+const kpiAssetCount = document.getElementById('kpi-asset-count');
+const kpiZoneCount = document.getElementById('kpi-zone-count');
+const kpiTimelineCount = document.getElementById('kpi-timeline-count');
 const llmSummary = document.getElementById('llm-summary');
 const llmCommandList = document.getElementById('llm-command-list');
 const llmResourceList = document.getElementById('llm-resource-list');
@@ -29,6 +33,9 @@ const scenarioGuidanceTitle = document.getElementById('scenario-guidance-title')
 const scenarioGuidanceDesc = document.getElementById('scenario-guidance-desc');
 const scenarioFocusList = document.getElementById('scenario-focus-list');
 const scenarioSpecificFields = document.getElementById('scenario-specific-fields');
+const signalRisk = document.getElementById('signal-risk');
+const signalResource = document.getElementById('signal-resource');
+const signalCommand = document.getElementById('signal-command');
 const heroPeople = document.getElementById('hero-people');
 const heroAffected = document.getElementById('hero-affected');
 const situationCommandMode = document.getElementById('situation-command-mode');
@@ -551,6 +558,14 @@ async function simulate(payload) {
   summaryScenario.textContent = report.summary.scenario_type_label;
   summaryLevel.textContent = report.summary.incident_level;
   summaryStrategy.textContent = report.summary.recommended_strategy;
+  // dashboard-kpi / signal-card values
+  kpiRiskCount.textContent = String((report.summary.top_risks || []).length);
+  kpiAssetCount.textContent = String((report.resource_plan.recommended_assets || []).length);
+  kpiZoneCount.textContent = String((report.task_zones || []).length);
+  kpiTimelineCount.textContent = String((report.timeline || []).length);
+  signalRisk.textContent = report.summary.top_risks?.[0] || '暂无风险信号';
+  signalResource.textContent = report.resource_plan.capability_gaps?.[0] || `推荐 ${report.resource_plan.recommended_assets?.[0] || '暂无装备建议'}`;
+  signalCommand.textContent = report.communication_plan.key_actions?.[0] || '暂无指挥信号';
 
   renderList(riskList, report.summary.top_risks);
   renderList(immediateList, report.action_plan.immediate_actions);
