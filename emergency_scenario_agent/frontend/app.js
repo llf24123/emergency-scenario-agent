@@ -27,6 +27,7 @@ const situationReporting = document.getElementById('situation-reporting');
 const situationGapCount = document.getElementById('situation-gap-count');
 const alertList = document.getElementById('alert-list');
 const timelineGrid = document.getElementById('timeline-grid');
+const taskZoneGrid = document.getElementById('task-zone-grid');
 const gapList = document.getElementById('gap-list');
 const equipmentFilter = document.getElementById('equipment-filter');
 const equipmentGrid = document.getElementById('equipment-grid');
@@ -186,12 +187,23 @@ function renderEquipmentLibrary(mode = equipmentFilter.value || 'all') {
     const scenarioTags = item.supported_scenarios.map((key) => `<span class="tag warn">${catalogMap[key] || key}</span>`).join('');
     const roleTags = item.deployment_roles.map((role) => `<span class="tag">${role}</span>`).join('');
     const capabilities = item.capabilities.map((cap) => `<li>${cap}</li>`).join('');
+    const taskTags = (item.recommended_tasks || []).map((task) => `<span class="tag">${task}</span>`).join('');
+    const modelText = (item.models || []).join(' / ');
     card.innerHTML = `
       <strong>${item.name}</strong>
       <div class="subtle">${item.category}</div>
       <p style="color: var(--muted); line-height:1.75; margin:10px 0 0;">${item.summary}</p>
       <div class="equipment-tags">${scenarioTags}</div>
       <div class="role-tags">${roleTags}</div>
+      <div class="meta-box" style="margin-top:12px;">
+        <div class="k">型号 / 库存 / 建议投送</div>
+        <div class="v">${modelText}<br>库存：${item.inventory_count} 台/套 · 建议投送：${item.recommended_quantity} 台/套</div>
+      </div>
+      <div class="meta-box" style="margin-top:12px;">
+        <div class="k">参考单价</div>
+        <div class="v">¥ ${Number(item.unit_cost_rmb || 0).toLocaleString('zh-CN')}</div>
+      </div>
+      <div class="role-tags" style="margin-top:12px;">${taskTags}</div>
       <ul class="list" style="margin-top:10px;">${capabilities}</ul>
     `;
     equipmentGrid.appendChild(card);
@@ -225,6 +237,13 @@ function renderSituation(report, payload) {
     <strong>T+${step.minute} 分钟</strong>
     <div class="subtle">${step.owner}</div>
     <div style="margin-top:8px;color:var(--muted);line-height:1.7;">${step.objective}</div>
+  `);
+
+  renderCardList(taskZoneGrid, report.task_zones || [], (zone) => `
+    <strong>${zone.zone_name}</strong>
+    <div class="subtle">${zone.target} · ${zone.assigned_team} · ${zone.priority}</div>
+    <div style="margin-top:8px;color:var(--muted);line-height:1.7;">任务：${(zone.tasks || []).join('；')}</div>
+    <div style="margin-top:8px;color:var(--muted);line-height:1.7;">装备：${(zone.equipment_support || []).join('、')}</div>
   `);
 
   const gapItems = report.resource_plan.capability_gaps?.length

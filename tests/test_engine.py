@@ -24,6 +24,20 @@ def test_high_rise_fire_generates_core_sections():
     assert any("机器人" in item for item in result.resource_plan.recommended_assets)
     assert any("通信" in item for item in result.communication_plan.key_actions)
     assert result.timeline[0].minute == 0
+    assert result.task_zones
+    assert any("楼层" in zone.target for zone in result.task_zones)
+
+
+def test_equipment_library_includes_cost_and_quantity_metadata():
+    engine = SimulationEngine()
+    library = engine.get_equipment_library()
+
+    first = library.items[0]
+    assert first.models
+    assert first.inventory_count > 0
+    assert first.unit_cost_rmb > 0
+    assert first.recommended_quantity > 0
+    assert first.recommended_tasks
 
 
 def test_chemical_leak_adds_decontamination_action():
@@ -67,6 +81,7 @@ def test_report_can_render_markdown():
     assert "地铁火灾" in markdown
     assert "## 行动计划" in markdown
     assert "## 时间线" in markdown
+    assert "## 任务分区" in markdown
 
 
 class FakeLLMClient:

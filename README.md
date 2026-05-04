@@ -2,7 +2,7 @@
 
 一个面向 **消防 / 应急 / 安全处置** 场景的多 Agent 推演系统。它将输入的事故信息结构化后，交给多个职责清晰的 Agent 协同分析，输出可直接用于汇报、值守研判、演练准备或系统集成的推演结果。
 
-> 当前版本：**v1.4.0**
+> 当前版本：**v1.5.0**
 
 ---
 
@@ -17,8 +17,8 @@
   - 时间线 Agent
 - **支持 API 与 CLI 双入口**
 - **内置 Web 前端控制台**，可直接填写场景并查看结果
-- **新增前端态势总览页**，可查看预警、时间线与资源缺口
-- **新增装备库**，按场景查看装备能力、适用任务与部署角色
+- **新增前端态势总览页**，可查看预警、时间线、楼层任务分区与资源缺口
+- **新增装备库**，按场景查看装备能力、适用任务、型号、库存、参考单价与建议投送数量
 - **支持 JSON / Markdown 两种输出**
 - **支持大模型增强模式**，可补充指挥简报、资源优化和对外沟通建议
 - **内置场景目录接口与装备库接口**，方便前端或第三方系统对接
@@ -125,8 +125,8 @@ python3 -m uvicorn emergency_scenario_agent.api:app --host 0.0.0.0 --port 8000
 - 直接填写场景参数
 - 一键载入高层火灾 / 危化泄漏示例
 - 查看“推演结果”页：摘要、风险、行动建议、资源建议、通信保障
-- 查看“态势总览”页：关键预警、行动时间线、资源缺口
-- 查看“装备库”页：按场景筛选装备能力、部署角色与适用任务
+- 查看“态势总览”页：关键预警、行动时间线、楼层任务分区、资源缺口
+- 查看“装备库”页：按场景筛选装备能力、部署角色、型号、库存与参考成本
 - 复制或下载 Markdown 报告
 - 实时查看 JSON 原始响应，便于系统联调
 
@@ -291,9 +291,86 @@ python3 -m pytest -q
 
 - 高层火灾推演主流程
 - 危化品泄漏洗消逻辑
-- Markdown 报告渲染
+- 装备库接口与装备元数据
+- 楼层任务分区生成与 Markdown 渲染
 - API 返回结构
 - 场景目录接口
+
+---
+
+## GitHub 推送失败时怎么处理
+
+如果你遇到 `git push origin main` 失败，当前项目环境最常见原因有 3 个：
+
+1. 没有安装 `gh`
+2. 没有配置 `git credential.helper`
+3. 没有 PAT 或 SSH key
+
+当前这台机器实测状态就是：
+
+- `gh` 未安装
+- `git credential.helper` 未配置
+- `~/.git-credentials` 不存在
+- `~/.ssh/id_*.pub` 不存在
+- `ssh -T git@github.com` 返回 `Permission denied (publickey)`
+
+### 最简单的解决办法：用 HTTPS + GitHub Token
+
+先执行：
+
+```bash
+git config --global credential.helper store
+```
+
+然后去 GitHub 创建一个 PAT（Personal Access Token）：
+
+- 打开：`https://github.com/settings/tokens`
+- 生成 classic token
+- 至少勾选：`repo`
+
+接着执行一次：
+
+```bash
+git push origin main
+```
+
+终端如果提示输入：
+
+- **Username**：填你的 GitHub 用户名
+- **Password**：不要填 GitHub 登录密码，要填刚才生成的 Token
+
+成功一次后，凭据会保存到 `~/.git-credentials`，后面再 push 就不用重复输。
+
+### 另一种办法：改用 SSH
+
+如果你想长期稳定一点，可以生成 SSH key：
+
+```bash
+ssh-keygen -t ed25519 -C "你的GitHub邮箱"
+cat ~/.ssh/id_ed25519.pub
+```
+
+然后把公钥内容加到：
+
+`https://github.com/settings/keys`
+
+加完后测试：
+
+```bash
+ssh -T git@github.com
+```
+
+如果看到欢迎信息，再把远程地址切成 SSH：
+
+```bash
+git remote set-url origin git@github.com:llf24123/emergency-scenario-agent.git
+```
+
+之后再执行：
+
+```bash
+git push origin main
+```
 
 ---
 

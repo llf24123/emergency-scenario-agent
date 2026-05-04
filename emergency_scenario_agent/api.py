@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from .engine import SimulationEngine
 from .models import EquipmentLibrary, MarkdownReport, ScenarioCatalog, ScenarioInput, SimulationReport
 
-app = FastAPI(title='应急场景推演Agent', version='1.4.0')
+app = FastAPI(title='应急场景推演Agent', version='1.5.0')
 engine = SimulationEngine()
 frontend_dir = Path(__file__).parent / 'frontend'
 app.mount('/static', StaticFiles(directory=frontend_dir), name='static')

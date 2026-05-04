@@ -64,6 +64,7 @@ def test_frontend_homepage_is_served():
     assert '生成推演报告' in response.text
     assert '态势总览' in response.text
     assert '装备库' in response.text
+    assert '楼层任务分区' in response.text
 
 
 
@@ -86,6 +87,11 @@ def test_equipment_library_endpoint_returns_catalog():
     assert 'name' in first_item
     assert 'category' in first_item
     assert 'supported_scenarios' in first_item
+    assert 'models' in first_item
+    assert 'inventory_count' in first_item
+    assert 'unit_cost_rmb' in first_item
+    assert 'recommended_quantity' in first_item
+    assert 'recommended_tasks' in first_item
 
 
 def test_simulate_llm_endpoint_returns_enhanced_payload(monkeypatch):

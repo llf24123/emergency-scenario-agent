@@ -58,12 +58,22 @@ class TimelineStep(BaseModel):
     owner: str
 
 
+class TaskZone(BaseModel):
+    zone_name: str
+    target: str
+    assigned_team: str
+    priority: str
+    tasks: list[str]
+    equipment_support: list[str]
+
+
 class SimulationReport(BaseModel):
     summary: ScenarioSummary
     action_plan: ActionPlan
     resource_plan: ResourcePlan
     communication_plan: CommunicationPlan
     timeline: list[TimelineStep]
+    task_zones: list[TaskZone]
     assumptions: list[str]
     llm_status: str = 'not_requested'
     llm_enhancement: 'LLMEnhancement | None' = None
@@ -91,6 +101,11 @@ class EquipmentItem(BaseModel):
     supported_scenarios: list[str]
     capabilities: list[str]
     deployment_roles: list[str]
+    models: list[str]
+    inventory_count: int = Field(..., ge=0)
+    unit_cost_rmb: int = Field(..., ge=0)
+    recommended_quantity: int = Field(..., ge=1)
+    recommended_tasks: list[str]
 
 
 class EquipmentLibrary(BaseModel):

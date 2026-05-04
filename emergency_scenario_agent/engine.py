@@ -16,6 +16,7 @@ from .models import (
     ScenarioInput,
     ScenarioSummary,
     SimulationReport,
+    TaskZone,
     TimelineStep,
 )
 
@@ -58,6 +59,11 @@ EQUIPMENT_LIBRARY = [
         'supported_scenarios': ['high_rise_fire', 'chemical_leak', 'subway_fire'],
         'capabilities': ['热成像侦察', '远程喷水/喷雾', '有毒环境替代人员抵近'],
         'deployment_roles': ['近距侦察', '控火压制', '危险区替代作业'],
+        'models': ['RXR-MC80BGD', 'QX-XF02'],
+        'inventory_count': 6,
+        'unit_cost_rmb': 680000,
+        'recommended_quantity': 2,
+        'recommended_tasks': ['着火层抵近侦察', '烟热区控火压制', '危险区替代作业'],
     },
     {
         'id': 'drone',
@@ -67,6 +73,11 @@ EQUIPMENT_LIBRARY = [
         'supported_scenarios': ['high_rise_fire', 'flood_response', 'earthquake_rescue'],
         'capabilities': ['高点态势回传', '外立面巡检', '搜索热源与受困目标'],
         'deployment_roles': ['空中侦察', '态势建模', '高点通信辅助'],
+        'models': ['Matrice 350 RTK', 'FC-30T'],
+        'inventory_count': 8,
+        'unit_cost_rmb': 145000,
+        'recommended_quantity': 2,
+        'recommended_tasks': ['高点侦察', '外立面热源扫描', '态势图回传'],
     },
     {
         'id': 'mesh_radio',
@@ -76,6 +87,11 @@ EQUIPMENT_LIBRARY = [
         'supported_scenarios': ['high_rise_fire', 'subway_fire', 'earthquake_rescue'],
         'capabilities': ['无线中继', '前后方语音数据回传', '复杂空间覆盖'],
         'deployment_roles': ['通信中继', '前后方联通', '态势共享'],
+        'models': ['MeshCom M6', 'E-LINK 5G Relay'],
+        'inventory_count': 12,
+        'unit_cost_rmb': 32000,
+        'recommended_quantity': 4,
+        'recommended_tasks': ['楼层通信中继', '电梯前室信号覆盖', '指挥链路保障'],
     },
     {
         'id': 'ladder_truck',
@@ -85,6 +101,11 @@ EQUIPMENT_LIBRARY = [
         'supported_scenarios': ['high_rise_fire'],
         'capabilities': ['高位喷射', '外部破拆救援', '高空观察'],
         'deployment_roles': ['外围压制', '窗口救援', '高位灭火'],
+        'models': ['DG54', 'JP62'],
+        'inventory_count': 3,
+        'unit_cost_rmb': 4200000,
+        'recommended_quantity': 1,
+        'recommended_tasks': ['高层外围压制', '窗口救援', '高位供水'],
     },
     {
         'id': 'hazmat_team',
@@ -94,6 +115,11 @@ EQUIPMENT_LIBRARY = [
         'supported_scenarios': ['chemical_leak'],
         'capabilities': ['介质侦检', '堵漏控源', '围堰与污染控制'],
         'deployment_roles': ['危化侦检', '堵漏处置', '扩散控制'],
+        'models': ['A级防化编组', '危化堵漏编组'],
+        'inventory_count': 4,
+        'unit_cost_rmb': 260000,
+        'recommended_quantity': 1,
+        'recommended_tasks': ['介质侦检', '泄漏源堵漏', '围堰与污染面控制'],
     },
     {
         'id': 'decon_unit',
@@ -103,6 +129,11 @@ EQUIPMENT_LIBRARY = [
         'supported_scenarios': ['chemical_leak'],
         'capabilities': ['人员洗消', '装备洗消', '污染区转运保障'],
         'deployment_roles': ['洗消作业', '污染控制', '恢复保障'],
+        'models': ['XC-12 洗消帐篷', 'DCU-8 洗消拖车'],
+        'inventory_count': 5,
+        'unit_cost_rmb': 180000,
+        'recommended_quantity': 1,
+        'recommended_tasks': ['暴露人员洗消', '装备洗消', '污染区转运保障'],
     },
 ]
 
@@ -266,6 +297,87 @@ class TimelineAgent:
         ]
 
 
+@dataclass
+class TaskZoneAgent:
+    def build(self, scenario: ScenarioInput) -> list[TaskZone]:
+        if scenario.scenario_type == 'high_rise_fire':
+            floors = sorted(scenario.floors_affected or [12, 13, 14])
+            attack_floor = floors[-1]
+            search_floor = floors[-2] if len(floors) > 1 else attack_floor - 1
+            support_floor = floors[0]
+            return [
+                TaskZone(
+                    zone_name='主攻控火区',
+                    target=f'{attack_floor} 楼层',
+                    assigned_team='内攻灭火组',
+                    priority='P1',
+                    tasks=['压制明火', '阻断垂直蔓延', '回传热成像与可燃物分布'],
+                    equipment_support=['消防机器人', '举高喷射车', '主攻水枪阵地'],
+                ),
+                TaskZone(
+                    zone_name='搜救疏散区',
+                    target=f'{search_floor} 楼层',
+                    assigned_team='搜救组',
+                    priority='P1',
+                    tasks=['搜索被困人员', '引导疏散', '复核防烟楼梯通行性'],
+                    equipment_support=['无人机', '破拆器材', '照明装备'],
+                ),
+                TaskZone(
+                    zone_name='供水通信支撑区',
+                    target=f'{support_floor} 楼层及避难层',
+                    assigned_team='供水排烟组 / 通信保障组',
+                    priority='P2',
+                    tasks=['部署水带干线', '布设自组网中继', '建立医疗与转运接驳点'],
+                    equipment_support=['自组网通信设备', '排烟机', '医疗转运单元'],
+                ),
+            ]
+        if scenario.scenario_type == 'chemical_leak':
+            return [
+                TaskZone(
+                    zone_name='上风向指挥集结区',
+                    target='上风向安全区',
+                    assigned_team='现场指挥员 / 医疗救护组',
+                    priority='P1',
+                    tasks=['建立指挥席', '组织伤员转运', '管控进入污染区人员'],
+                    equipment_support=['指挥车', '医疗救护包', '通信中继'],
+                ),
+                TaskZone(
+                    zone_name='源头堵漏区',
+                    target='泄漏源核心区',
+                    assigned_team='危化处置组',
+                    priority='P1',
+                    tasks=['介质侦检', '堵漏控源', '围堰截流'],
+                    equipment_support=['危化处置组', '堵漏工具组', '消防机器人'],
+                ),
+                TaskZone(
+                    zone_name='洗消转运区',
+                    target='污染边界外侧',
+                    assigned_team='洗消组',
+                    priority='P2',
+                    tasks=['人员装备洗消', '污染物暂存', '转运闭环管理'],
+                    equipment_support=['洗消单元', '转运担架', '洗消帐篷'],
+                ),
+            ]
+        return [
+            TaskZone(
+                zone_name='核心处置区',
+                target='事故核心区',
+                assigned_team='主攻组',
+                priority='P1',
+                tasks=['快速侦察', '主任务处置', '持续回传关键态势'],
+                equipment_support=['无人机', '通信设备'],
+            ),
+            TaskZone(
+                zone_name='外围支撑区',
+                target='警戒与后勤区',
+                assigned_team='后勤保障组',
+                priority='P2',
+                tasks=['物资补给', '人员轮换', '伤员转运'],
+                equipment_support=['后勤车辆', '照明装备'],
+            ),
+        ]
+
+
 class SimulationEngine:
     def __init__(self, llm_client: Any | None = None) -> None:
         self.risk_assessor = RiskAssessorAgent()
@@ -274,11 +386,12 @@ class SimulationEngine:
         self.resource_planner = ResourcePlannerAgent()
         self.communication_agent = CommunicationAgent()
         self.timeline_agent = TimelineAgent()
+        self.task_zone_agent = TaskZoneAgent()
         self.llm_client = llm_client or OpenAICompatibleLLMClient()
 
     def get_catalog(self) -> ScenarioCatalog:
         return ScenarioCatalog(
-            version='1.4.0',
+            version='1.5.0',
             supported_scenarios=SCENARIO_LABELS,
             supported_resources=RESOURCE_LABELS,
             severity_levels=SEVERITY_LABELS,
@@ -286,7 +399,7 @@ class SimulationEngine:
 
     def get_equipment_library(self) -> EquipmentLibrary:
         return EquipmentLibrary(
-            version='1.4.0',
+            version='1.5.0',
             items=[EquipmentItem(**item) for item in EQUIPMENT_LIBRARY],
         )
 
@@ -297,6 +410,7 @@ class SimulationEngine:
         resource_plan = self.resource_planner.build(scenario)
         communication_plan = self.communication_agent.build(scenario)
         timeline = self.timeline_agent.build(scenario)
+        task_zones = self.task_zone_agent.build(scenario)
 
         assumptions = [
             '默认当地消防救援力量可在常规响应时间内到场。',
@@ -318,6 +432,7 @@ class SimulationEngine:
             resource_plan=resource_plan,
             communication_plan=communication_plan,
             timeline=timeline,
+            task_zones=task_zones,
             assumptions=assumptions,
         )
 
@@ -364,6 +479,11 @@ class SimulationEngine:
         sections.extend([f'- {item}' for item in report.communication_plan.key_actions])
         sections.extend(['', '## 时间线'])
         sections.extend([f'- T+{step.minute} 分钟｜{step.owner}：{step.objective}' for step in report.timeline])
+        sections.extend(['', '## 任务分区'])
+        for zone in report.task_zones:
+            sections.append(f'- {zone.zone_name}｜{zone.target}｜{zone.assigned_team}｜优先级 {zone.priority}')
+            sections.extend([f'  - 任务：{item}' for item in zone.tasks])
+            sections.extend([f'  - 装备：{item}' for item in zone.equipment_support])
         sections.extend(['', '## 关键假设'])
         sections.extend([f'- {item}' for item in report.assumptions])
         if report.llm_enhancement:
