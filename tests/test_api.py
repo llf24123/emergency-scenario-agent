@@ -65,6 +65,9 @@ def test_frontend_homepage_is_served():
     assert '态势总览' in response.text
     assert '装备库' in response.text
     assert '楼层任务分区' in response.text
+    assert '严重等级' in response.text
+    assert '天气情况' in response.text
+    assert '影响楼层 / 区域' in response.text
 
 
 
@@ -74,6 +77,9 @@ def test_frontend_javascript_is_served():
     assert 'application/javascript' in response.headers['content-type'] or 'text/javascript' in response.headers['content-type']
     assert 'simulate' in response.text
     assert 'equipment-library' in response.text
+    assert 'updateScenarioSpecificFields' in response.text
+    assert 'weatherOptions' in response.text
+    assert 'timeOfDayOptions' in response.text
 
 
 

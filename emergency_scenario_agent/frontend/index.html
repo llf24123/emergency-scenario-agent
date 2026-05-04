@@ -241,30 +241,26 @@
           </div>
           <div class="two">
             <div>
-              <label for="severity">严重级别</label>
-              <select id="severity" name="severity">
-                <option value="medium">medium</option>
-                <option value="high" selected>high</option>
-                <option value="critical">critical</option>
-              </select>
+              <label for="severity">严重等级</label>
+              <select id="severity" name="severity"></select>
             </div>
             <div>
-              <label for="time_of_day">时间</label>
-              <input id="time_of_day" name="time_of_day" value="night" />
+              <label for="time_of_day">时间时段</label>
+              <select id="time_of_day" name="time_of_day"></select>
             </div>
           </div>
           <div class="two">
             <div>
-              <label for="weather">天气</label>
-              <input id="weather" name="weather" value="windy" />
+              <label for="weather">天气情况</label>
+              <select id="weather" name="weather"></select>
             </div>
             <div>
               <label for="people_trapped">被困人数</label>
               <input id="people_trapped" name="people_trapped" type="number" min="0" value="8" />
             </div>
           </div>
-          <div>
-            <label for="floors_affected">影响楼层 / 区域（逗号分隔）</label>
+          <div id="floors-group">
+            <label for="floors_affected" id="floors-label">影响楼层 / 区域（逗号分隔）</label>
             <input id="floors_affected" name="floors_affected" value="18,19,20" />
           </div>
           <div>

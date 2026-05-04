@@ -13,6 +13,11 @@ const scenarioSelect = document.getElementById('scenario_type');
 const supportedCount = document.getElementById('supported-count');
 const equipmentCount = document.getElementById('equipment-count');
 const useLLM = document.getElementById('use_llm');
+const severitySelect = document.getElementById('severity');
+const weatherSelect = document.getElementById('weather');
+const timeOfDaySelect = document.getElementById('time_of_day');
+const floorsGroup = document.getElementById('floors-group');
+const floorsLabel = document.getElementById('floors-label');
 const llmStatus = document.getElementById('llm-status');
 const llmStatusHero = document.getElementById('llm-status-hero');
 const llmSummary = document.getElementById('llm-summary');
@@ -62,6 +67,38 @@ let latestEquipment = [];
 let catalogMap = {};
 let markdownCache = '';
 
+const severityOptions = [
+  ['medium', '中等'],
+  ['high', '高'],
+  ['critical', '极高'],
+];
+
+const weatherOptions = [
+  ['sunny', '晴天'],
+  ['cloudy', '多云'],
+  ['rainy', '雨天'],
+  ['windy', '大风'],
+  ['storm', '暴雨/强对流'],
+  ['foggy', '雾天'],
+];
+
+const timeOfDayOptions = [
+  ['early_morning', '凌晨'],
+  ['morning', '上午'],
+  ['afternoon', '下午'],
+  ['evening', '傍晚'],
+  ['night', '夜间'],
+  ['rush_hour', '早晚高峰'],
+];
+
+const scenarioFieldRules = {
+  high_rise_fire: { showFloors: true, floorsLabel: '影响楼层（逗号分隔）', floorsPlaceholder: '18,19,20' },
+  subway_fire: { showFloors: true, floorsLabel: '影响站层 / 区域（逗号分隔）', floorsPlaceholder: '1,2' },
+  flood_response: { showFloors: false, floorsLabel: '影响区域（逗号分隔）', floorsPlaceholder: '低洼路段,A区地下车库' },
+  chemical_leak: { showFloors: false, floorsLabel: '重点区域（逗号分隔）', floorsPlaceholder: '储罐区,装卸区' },
+  earthquake_rescue: { showFloors: false, floorsLabel: '重点区域（逗号分隔）', floorsPlaceholder: '1号楼东侧,地下空间' },
+};
+
 function setStatus(text, ok = false, err = false) {
   statusEl.textContent = text;
   statusEl.className = `status${ok ? ' ok' : ''}${err ? ' err' : ''}`;
@@ -74,6 +111,27 @@ function renderList(el, items) {
     li.textContent = item;
     el.appendChild(li);
   });
+}
+
+function fillSelectOptions(selectEl, options, selectedValue) {
+  selectEl.innerHTML = '';
+  options.forEach(([value, label]) => {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    if (value === selectedValue) opt.selected = true;
+    selectEl.appendChild(opt);
+  });
+}
+
+function updateScenarioSpecificFields(scenarioType) {
+  const rule = scenarioFieldRules[scenarioType] || { showFloors: true, floorsLabel: '影响区域（逗号分隔）', floorsPlaceholder: '' };
+  floorsGroup.style.display = rule.showFloors ? 'block' : 'none';
+  floorsLabel.textContent = rule.floorsLabel;
+  form.floors_affected.placeholder = rule.floorsPlaceholder || '';
+  if (!rule.showFloors) {
+    form.floors_affected.value = '';
+  }
 }
 
 function renderCardList(el, items, formatter) {
@@ -89,13 +147,14 @@ function renderCardList(el, items, formatter) {
 function fillForm(data) {
   scenarioSelect.value = data.scenario_type;
   form.location_type.value = data.location_type;
-  form.severity.value = data.severity;
-  form.weather.value = data.weather;
-  form.time_of_day.value = data.time_of_day;
+  severitySelect.value = data.severity;
+  weatherSelect.value = data.weather;
+  timeOfDaySelect.value = data.time_of_day;
   form.people_trapped.value = data.people_trapped;
   form.floors_affected.value = (data.floors_affected || []).join(',');
   form.hazards.value = (data.hazards || []).join(',');
   form.available_resources.value = (data.available_resources || []).join(',');
+  updateScenarioSpecificFields(data.scenario_type);
   syncEquipmentFilter();
 }
 
@@ -140,6 +199,9 @@ async function fetchCatalog() {
     scenarioSelect.appendChild(opt);
   });
   supportedCount.textContent = `${Object.keys(catalogMap).length} 类`;
+  fillSelectOptions(severitySelect, severityOptions, 'high');
+  fillSelectOptions(weatherSelect, weatherOptions, highRiseExample.weather);
+  fillSelectOptions(timeOfDaySelect, timeOfDayOptions, highRiseExample.time_of_day);
 
   equipmentFilter.innerHTML = '';
   const defaults = [
@@ -350,6 +412,7 @@ document.getElementById('show-all-equipment').addEventListener('click', () => re
 equipmentFilter.addEventListener('change', (event) => renderEquipmentLibrary(event.target.value));
 scenarioSelect.addEventListener('change', () => {
   latestPayload = { ...latestPayload, scenario_type: scenarioSelect.value };
+  updateScenarioSpecificFields(scenarioSelect.value);
   renderEquipmentLibrary(scenarioSelect.value);
 });
 
