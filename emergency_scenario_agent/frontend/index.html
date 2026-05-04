@@ -136,7 +136,36 @@
       background: rgba(255,255,255,0.04); color: var(--text); padding: 12px 14px; font-size: 14px;
       outline: none;
     }
+    select, select option, select optgroup {
+      background: #10203a;
+      color: var(--text);
+    }
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #bcd6ff 50%), linear-gradient(135deg, #bcd6ff 50%, transparent 50%);
+      background-position: calc(100% - 18px) calc(1.1em + 2px), calc(100% - 12px) calc(1.1em + 2px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 34px;
+    }
     textarea { min-height: 96px; resize: vertical; }
+    .selection-card {
+      padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .selection-grid {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .selection-chip {
+      display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 999px;
+      border: 1px solid rgba(150, 184, 255, 0.18); background: rgba(255,255,255,0.03); color: var(--muted); cursor: pointer;
+      transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+    }
+    .selection-chip.active {
+      background: rgba(64,169,255,0.16); border-color: rgba(64,169,255,0.42); color: #fff;
+    }
+    .selection-chip input { display: none; }
+    .hidden-input { display: none; }
     input:focus, select:focus, textarea:focus {
       border-color: rgba(64, 169, 255, 0.8); box-shadow: 0 0 0 3px rgba(64, 169, 255, 0.16);
     }
@@ -340,13 +369,24 @@
             <label for="floors_affected" id="floors-label">影响楼层 / 区域（逗号分隔）</label>
             <input id="floors_affected" name="floors_affected" value="18,19,20" />
           </div>
-          <div>
-            <label for="hazards">危险因素（逗号分隔）</label>
-            <input id="hazards" name="hazards" value="smoke,power_outage" />
+          <div class="selection-card">
+            <label for="hazards">危险因素研判</label>
+            <div class="subtle" style="margin-bottom:10px;">按当前场景勾选现场危险因素，系统会自动参与风险和装备推荐。</div>
+            <div id="hazard-options" class="selection-grid"></div>
+            <input id="hazards" name="hazards" class="hidden-input" value="smoke,power_outage" />
           </div>
-          <div>
-            <label for="available_resources">可用资源（逗号分隔）</label>
-            <textarea id="available_resources" name="available_resources">fire_robot,drone,mesh_radio</textarea>
+          <div class="selection-card">
+            <div class="panel-title" style="margin-bottom:10px;">
+              <div>
+                <label for="available_resources" style="margin-bottom:4px;">资源配置（高级）</label>
+                <div class="subtle">普通使用可不展开；需要指定现有装备时再勾选。</div>
+              </div>
+              <button type="button" class="ghost" id="toggle-advanced-resources">显示高级资源配置</button>
+            </div>
+            <div id="advanced-resources-panel" style="display:none;">
+              <div id="resource-options" class="selection-grid"></div>
+            </div>
+            <input id="available_resources" name="available_resources" class="hidden-input" value="fire_robot,drone,mesh_radio" />
           </div>
           <div class="checkbox-row">
             <input id="use_llm" name="use_llm" type="checkbox" checked />

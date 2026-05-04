@@ -85,6 +85,10 @@ def test_frontend_homepage_is_served():
     assert '任务筛选' in response.text
     assert '场景推荐清单' in response.text
     assert '采购建议' in response.text
+    assert '危险因素研判' in response.text
+    assert '资源配置（高级）' in response.text
+    assert '显示高级资源配置' in response.text
+    assert 'select option' in response.text
 
 
 
@@ -109,6 +113,10 @@ def test_frontend_javascript_is_served():
     assert 'equipment-task-filter' in response.text
     assert 'renderScenarioEquipmentPlan' in response.text
     assert 'scenario-budget-plan' in response.text
+    assert 'hazardOptionsMap' in response.text
+    assert 'resourceOptions' in response.text
+    assert 'toggleAdvancedResources' in response.text
+    assert 'renderHazardOptions' in response.text
 
 
 

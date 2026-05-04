@@ -61,6 +61,12 @@ const scenarioBudgetAmount = document.getElementById('scenario-budget-amount');
 const scenarioBudgetTotal = document.getElementById('scenario-budget-total');
 const scenarioBudgetAdvice = document.getElementById('scenario-budget-advice');
 const scenarioBudgetPlan = document.getElementById('scenario-budget-plan');
+const hazardsInput = document.getElementById('hazards');
+const availableResourcesInput = document.getElementById('available_resources');
+const hazardOptionsContainer = document.getElementById('hazard-options');
+const resourceOptionsContainer = document.getElementById('resource-options');
+const toggleAdvancedResourcesBtn = document.getElementById('toggle-advanced-resources');
+const advancedResourcesPanel = document.getElementById('advanced-resources-panel');
 
 const highRiseExample = {
   scenario_type: 'high_rise_fire',
@@ -115,6 +121,27 @@ const timeOfDayOptions = [
   ['evening', '傍晚'],
   ['night', '夜间'],
   ['rush_hour', '早晚高峰'],
+];
+
+const hazardOptionsMap = {
+  high_rise_fire: [['smoke', '浓烟'], ['power_outage', '停电'], ['elevator_outage', '电梯停运'], ['glass_fall', '高空坠物'], ['explosion_risk', '爆炸风险'], ['evacuation_blockage', '通道受阻']],
+  chemical_leak: [['toxic_gas', '有毒气体'], ['corrosive_material', '腐蚀性介质'], ['open_flame', '伴随明火'], ['spread_acceleration', '扩散加快'], ['pollution_spread', '污染面扩大']],
+  flood_response: [['flooding', '积水'], ['deep_water', '深积水'], ['transport_disruption', '交通中断'], ['power_outage', '停电'], ['water_contamination', '污水倒灌']],
+  earthquake_rescue: [['structural_damage', '结构受损'], ['aftershock', '余震风险'], ['secondary_collapse', '二次坍塌'], ['power_outage', '停电'], ['communication_disruption', '通信中断']],
+  subway_fire: [['smoke', '浓烟'], ['power_outage', '停电'], ['evacuation_blockage', '疏散通道受阻'], ['passenger_congestion', '客流拥堵'], ['underground_heat', '地下高温']],
+};
+
+const resourceOptions = [
+  ['fire_robot', '消防机器人'],
+  ['drone', '无人机'],
+  ['mesh_radio', '自组网通信设备'],
+  ['ladder_truck', '举高喷射车'],
+  ['hazmat_team', '危化处置组'],
+  ['decon_unit', '洗消单元'],
+  ['drainage_pump', '大流量排涝装备'],
+  ['life_detector', '雷达生命探测仪'],
+  ['lighting_unit', '应急照明装备'],
+  ['portable_satellite_command', '便携卫星指挥站'],
 ];
 
 const scenarioFieldRules = {
@@ -205,6 +232,45 @@ function renderList(el, items) {
     li.textContent = item;
     el.appendChild(li);
   });
+}
+
+function parseHiddenListValue(value) {
+  return (value || '').split(',').map((item) => item.trim()).filter(Boolean);
+}
+
+function updateSelectionInput(inputEl, values) {
+  inputEl.value = Array.from(new Set(values)).join(',');
+}
+
+function renderSelectableChips(container, options, selectedValues, inputEl) {
+  container.innerHTML = '';
+  options.forEach(([value, label]) => {
+    const chip = document.createElement('label');
+    chip.className = `selection-chip${selectedValues.has(value) ? ' active' : ''}`;
+    chip.innerHTML = `<input type="checkbox" value="${value}" ${selectedValues.has(value) ? 'checked' : ''}><span>${label}</span>`;
+    chip.addEventListener('click', () => {
+      const next = new Set(parseHiddenListValue(inputEl.value));
+      if (next.has(value)) next.delete(value); else next.add(value);
+      updateSelectionInput(inputEl, [...next]);
+      renderSelectableChips(container, options, next, inputEl);
+    });
+    container.appendChild(chip);
+  });
+}
+
+function renderHazardOptions(scenarioType, selected = parseHiddenListValue(hazardsInput.value)) {
+  const options = hazardOptionsMap[scenarioType] || [];
+  renderSelectableChips(hazardOptionsContainer, options, new Set(selected), hazardsInput);
+}
+
+function renderResourceOptions(selected = parseHiddenListValue(availableResourcesInput.value)) {
+  renderSelectableChips(resourceOptionsContainer, resourceOptions, new Set(selected), availableResourcesInput);
+}
+
+function toggleAdvancedResources(forceOpen = null) {
+  const willOpen = forceOpen !== null ? forceOpen : advancedResourcesPanel.style.display === 'none';
+  advancedResourcesPanel.style.display = willOpen ? 'block' : 'none';
+  toggleAdvancedResourcesBtn.textContent = willOpen ? '收起高级资源配置' : '显示高级资源配置';
 }
 
 function fillSelectOptions(selectEl, options, selectedValue) {
@@ -341,6 +407,7 @@ function updateScenarioSpecificFields(scenarioType) {
   floorsLabel.textContent = rule.floorsLabel;
   form.floors_affected.placeholder = rule.floorsPlaceholder || '';
   renderScenarioFields(scenarioType);
+  renderHazardOptions(scenarioType);
   if (!rule.showFloors) {
     form.floors_affected.value = '';
   }
@@ -375,9 +442,11 @@ function fillForm(data) {
   timeOfDaySelect.value = data.time_of_day;
   form.people_trapped.value = data.people_trapped;
   form.floors_affected.value = (data.floors_affected || []).join(',');
-  form.hazards.value = (data.hazards || []).join(',');
-  form.available_resources.value = (data.available_resources || []).join(',');
+  hazardsInput.value = (data.hazards || []).join(',');
+  availableResourcesInput.value = (data.available_resources || []).join(',');
   updateScenarioSpecificFields(data.scenario_type);
+  renderHazardOptions(data.scenario_type, data.hazards || []);
+  renderResourceOptions(data.available_resources || []);
   syncEquipmentFilter();
 }
 
@@ -390,8 +459,8 @@ function readPayload() {
     time_of_day: form.time_of_day.value.trim(),
     people_trapped: Number(form.people_trapped.value || 0),
     floors_affected: form.floors_affected.value.split(',').map((x) => x.trim()).filter(Boolean).map(Number).filter(Boolean),
-    hazards: form.hazards.value.split(',').map((x) => x.trim()).filter(Boolean),
-    available_resources: form.available_resources.value.split(',').map((x) => x.trim()).filter(Boolean),
+    hazards: parseHiddenListValue(hazardsInput.value),
+    available_resources: parseHiddenListValue(availableResourcesInput.value),
   };
   return buildScenarioSpecificPayload(basePayload);
 }
@@ -740,6 +809,7 @@ document.getElementById('download-markdown').addEventListener('click', () => {
 
 document.getElementById('load-highrise').addEventListener('click', () => fillForm(highRiseExample));
 document.getElementById('load-chemical').addEventListener('click', () => fillForm(chemicalExample));
+toggleAdvancedResourcesBtn.addEventListener('click', () => toggleAdvancedResources());
 document.getElementById('show-recommended-equipment').addEventListener('click', () => {
   equipmentFilter.value = 'recommended';
   renderEquipmentLibrary('recommended');
@@ -762,6 +832,8 @@ scenarioSelect.addEventListener('change', () => {
 
 (async function init() {
   try {
+    renderResourceOptions(highRiseExample.available_resources || []);
+    toggleAdvancedResources(false);
     await Promise.all([fetchCatalog(), fetchEquipmentLibrary()]);
     fillForm(highRiseExample);
     await simulate(highRiseExample);
