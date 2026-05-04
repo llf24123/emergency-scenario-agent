@@ -103,6 +103,7 @@ def test_equipment_library_endpoint_returns_catalog():
     data = response.json()
     assert data['version']
     assert data['items']
+    assert len(data['items']) >= 12
     first_item = data['items'][0]
     assert 'name' in first_item
     assert 'category' in first_item

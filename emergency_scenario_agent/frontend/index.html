@@ -36,7 +36,21 @@
         radial-gradient(circle at 85% 15%, rgba(108, 99, 255, 0.18), transparent 22%),
         linear-gradient(180deg, #08101c 0%, #0a1322 45%, #07111f 100%);
     }
-    .shell { max-width: 1500px; margin: 0 auto; padding: 24px; }
+    .shell { max-width: 1600px; margin: 0 auto; padding: 24px; }
+    .product-shell { display: grid; grid-template-columns: 240px 1fr; gap: 18px; align-items: start; }
+    .sidebar {
+      position: sticky; top: 18px; padding: 20px; border-radius: 22px; background: rgba(10, 18, 32, 0.92);
+      border: 1px solid rgba(150, 184, 255, 0.16); box-shadow: var(--shadow);
+    }
+    .sidebar h3 { margin: 0 0 12px; font-size: 16px; }
+    .sidebar .nav-group { display: grid; gap: 10px; margin-bottom: 18px; }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: var(--muted); font-size: 14px;
+    }
+    .sidebar .nav-item strong { color: var(--text); font-size: 14px; }
+    .sidebar .nav-note { color: var(--soft); font-size: 12px; line-height: 1.7; }
+    .workspace { display: grid; gap: 18px; }
     .topbar {
       display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
       margin-bottom: 18px;
@@ -188,7 +202,7 @@
     .markdown { font-size: 13px; }
     .footer-note { color: var(--soft); font-size: 12px; }
     @media (max-width: 1200px) {
-      .hero, .layout, .meta-grid, .equipment-grid { grid-template-columns: 1fr; }
+      .product-shell, .hero, .layout, .meta-grid, .equipment-grid { grid-template-columns: 1fr; }
       .hero-grid, .status-board { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 760px) {
@@ -200,6 +214,23 @@
 </head>
 <body>
   <div class="shell">
+    <div class="product-shell">
+      <aside class="sidebar">
+        <h3>产品导航</h3>
+        <div class="nav-group">
+          <div class="nav-item">🧭 <div><strong>总览首页</strong><div class="nav-note">运行总览 / KPI / 信号卡</div></div></div>
+          <div class="nav-item">🧯 <div><strong>场景推演</strong><div class="nav-note">专业表单 / 场景引导</div></div></div>
+          <div class="nav-item">📡 <div><strong>态势总览</strong><div class="nav-note">风险 / 时间线 / 分区</div></div></div>
+          <div class="nav-item">🧰 <div><strong>装备库</strong><div class="nav-note">型号 / 库存 / 单价 / 搜索候选</div></div></div>
+        </div>
+        <h3>系统标签</h3>
+        <div class="nav-group">
+          <div class="nav-item">🤖 <div><strong>多 Agent</strong><div class="nav-note">规则主链稳定输出</div></div></div>
+          <div class="nav-item">✨ <div><strong>LLM 增强</strong><div class="nav-note">摘要 / 简报 / 沟通建议</div></div></div>
+          <div class="nav-item">🏭 <div><strong>市场装备</strong><div class="nav-note">加入可检索型号产品</div></div></div>
+        </div>
+      </aside>
+      <div class="workspace">
     <section class="topbar">
       <div class="brand">
         <div class="brand-mark">EA</div>
@@ -435,6 +466,8 @@
         </div>
       </div>
     </section>
+      </div>
+    </div>
   </div>
   <script src="/static/app.js"></script>
 </body>

@@ -38,6 +38,7 @@ def test_equipment_library_includes_cost_and_quantity_metadata():
     assert first.unit_cost_rmb > 0
     assert first.recommended_quantity > 0
     assert first.recommended_tasks
+    assert len(library.items) >= 12
 
 
 def test_chemical_leak_adds_decontamination_action():
