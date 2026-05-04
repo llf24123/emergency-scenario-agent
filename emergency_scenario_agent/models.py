@@ -65,3 +65,15 @@ class SimulationReport(BaseModel):
     communication_plan: CommunicationPlan
     timeline: list[TimelineStep]
     assumptions: list[str]
+
+
+class ScenarioCatalog(BaseModel):
+    version: str
+    supported_scenarios: dict[str, str]
+    supported_resources: dict[str, str]
+    severity_levels: dict[str, str]
+
+
+class MarkdownReport(BaseModel):
+    format: str = 'markdown'
+    content: str

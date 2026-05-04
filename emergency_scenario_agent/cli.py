@@ -18,6 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--floors-affected', default='')
     parser.add_argument('--hazards', default='')
     parser.add_argument('--available-resources', default='')
+    parser.add_argument('--format', choices=['json', 'markdown'], default='json')
     return parser
 
 
@@ -34,8 +35,12 @@ def main() -> None:
         hazards=[item for item in args.hazards.split(',') if item],
         available_resources=[item for item in args.available_resources.split(',') if item],
     )
-    report = SimulationEngine().run(scenario)
-    print(json.dumps(report.model_dump(), ensure_ascii=False, indent=2))
+    engine = SimulationEngine()
+    report = engine.run(scenario)
+    if args.format == 'markdown':
+        print(engine.render_markdown(report))
+    else:
+        print(json.dumps(report.model_dump(), ensure_ascii=False, indent=2))
 
 
 if __name__ == '__main__':

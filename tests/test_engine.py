@@ -45,3 +45,25 @@ def test_chemical_leak_adds_decontamination_action():
     combined_actions = result.action_plan.immediate_actions + result.action_plan.stabilization_actions
     assert any("洗消" in item for item in combined_actions)
     assert any("警戒" in item for item in result.action_plan.immediate_actions)
+
+
+def test_report_can_render_markdown():
+    engine = SimulationEngine()
+    scenario = ScenarioInput(
+        scenario_type="subway_fire",
+        location_type="metro_station",
+        severity="medium",
+        weather="cloudy",
+        time_of_day="rush_hour",
+        people_trapped=30,
+        hazards=["smoke"],
+        available_resources=["drone", "mesh_radio"],
+    )
+
+    report = engine.run(scenario)
+    markdown = engine.render_markdown(report)
+
+    assert "# 应急场景推演报告" in markdown
+    assert "地铁火灾" in markdown
+    assert "## 行动计划" in markdown
+    assert "## 时间线" in markdown

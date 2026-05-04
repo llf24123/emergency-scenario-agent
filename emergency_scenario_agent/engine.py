@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from .models import (
     ActionPlan,
     CommunicationPlan,
+    MarkdownReport,
     ResourcePlan,
+    ScenarioCatalog,
     ScenarioInput,
     ScenarioSummary,
     SimulationReport,
@@ -25,6 +27,12 @@ SEVERITY_TO_INCIDENT = {
     'medium': '一般',
     'high': '较大',
     'critical': '重大',
+}
+
+SEVERITY_LABELS = {
+    'medium': '中风险',
+    'high': '高风险',
+    'critical': '极高风险',
 }
 
 RESOURCE_LABELS = {
@@ -205,6 +213,14 @@ class SimulationEngine:
         self.communication_agent = CommunicationAgent()
         self.timeline_agent = TimelineAgent()
 
+    def get_catalog(self) -> ScenarioCatalog:
+        return ScenarioCatalog(
+            version='1.1.0',
+            supported_scenarios=SCENARIO_LABELS,
+            supported_resources=RESOURCE_LABELS,
+            severity_levels=SEVERITY_LABELS,
+        )
+
     def run(self, scenario: ScenarioInput) -> SimulationReport:
         risks = self.risk_assessor.evaluate(scenario)
         strategy = self.strategy_agent.recommend(scenario, risks)
@@ -235,3 +251,40 @@ class SimulationEngine:
             timeline=timeline,
             assumptions=assumptions,
         )
+
+    def render_markdown(self, report: SimulationReport) -> str:
+        sections = [
+            '# 应急场景推演报告',
+            '',
+            '## 事件摘要',
+            f'- 场景类型：{report.summary.scenario_type_label}',
+            f'- 事件等级：{report.summary.incident_level}',
+            f'- 推荐总策略：{report.summary.recommended_strategy}',
+            '',
+            '## 主要风险',
+        ]
+        sections.extend([f'- {risk}' for risk in report.summary.top_risks])
+        sections.extend(['', '## 行动计划', '### 立即行动'])
+        sections.extend([f'- {item}' for item in report.action_plan.immediate_actions])
+        sections.extend(['', '### 稳定控制'])
+        sections.extend([f'- {item}' for item in report.action_plan.stabilization_actions])
+        sections.extend(['', '### 后续收尾'])
+        sections.extend([f'- {item}' for item in report.action_plan.follow_up_actions])
+        sections.extend(['', '## 资源调度'])
+        sections.extend([f'- 优先序列：{"、".join(report.resource_plan.dispatch_priority)}'])
+        sections.extend([f'- 推荐装备：{"、".join(report.resource_plan.recommended_assets)}'])
+        if report.resource_plan.capability_gaps:
+            sections.append('- 能力缺口：')
+            sections.extend([f'  - {item}' for item in report.resource_plan.capability_gaps])
+        sections.extend(['', '## 通信保障'])
+        sections.append(f'- 指挥模式：{report.communication_plan.command_mode}')
+        sections.append(f'- 报送频率：{report.communication_plan.reporting_frequency}')
+        sections.extend([f'- {item}' for item in report.communication_plan.key_actions])
+        sections.extend(['', '## 时间线'])
+        sections.extend([f'- T+{step.minute} 分钟｜{step.owner}：{step.objective}' for step in report.timeline])
+        sections.extend(['', '## 关键假设'])
+        sections.extend([f'- {item}' for item in report.assumptions])
+        return '\n'.join(sections)
+
+    def render_markdown_response(self, report: SimulationReport) -> MarkdownReport:
+        return MarkdownReport(content=self.render_markdown(report))

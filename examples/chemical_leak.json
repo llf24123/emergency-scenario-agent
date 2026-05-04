@@ -1,0 +1,11 @@
+{
+  "scenario_type": "chemical_leak",
+  "location_type": "industrial_park",
+  "severity": "critical",
+  "weather": "rainy",
+  "time_of_day": "night",
+  "people_trapped": 2,
+  "floors_affected": [],
+  "hazards": ["toxic_gas", "corrosive_material"],
+  "available_resources": ["hazmat_team", "decon_unit", "fire_robot"]
+}

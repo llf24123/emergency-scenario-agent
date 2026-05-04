@@ -1,0 +1,11 @@
+{
+  "scenario_type": "high_rise_fire",
+  "location_type": "residential_tower",
+  "severity": "high",
+  "weather": "windy",
+  "time_of_day": "night",
+  "people_trapped": 8,
+  "floors_affected": [18, 19, 20],
+  "hazards": ["smoke", "power_outage"],
+  "available_resources": ["fire_robot", "drone", "mesh_radio"]
+}
