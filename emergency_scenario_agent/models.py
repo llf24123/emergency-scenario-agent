@@ -83,6 +83,21 @@ class ScenarioCatalog(BaseModel):
     severity_levels: dict[str, str]
 
 
+class EquipmentItem(BaseModel):
+    id: str
+    name: str
+    category: str
+    summary: str
+    supported_scenarios: list[str]
+    capabilities: list[str]
+    deployment_roles: list[str]
+
+
+class EquipmentLibrary(BaseModel):
+    version: str
+    items: list[EquipmentItem]
+
+
 class MarkdownReport(BaseModel):
     format: str = 'markdown'
     content: str

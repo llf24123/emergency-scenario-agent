@@ -7,6 +7,8 @@ from .llm import OpenAICompatibleLLMClient
 from .models import (
     ActionPlan,
     CommunicationPlan,
+    EquipmentItem,
+    EquipmentLibrary,
     LLMEnhancement,
     MarkdownReport,
     ResourcePlan,
@@ -46,6 +48,63 @@ RESOURCE_LABELS = {
     'hazmat_team': '危化处置组',
     'decon_unit': '洗消单元',
 }
+
+EQUIPMENT_LIBRARY = [
+    {
+        'id': 'fire_robot',
+        'name': '消防机器人',
+        'category': '地面无人平台',
+        'summary': '适用于高温、浓烟和爆炸风险区域的抵近侦察与控火压制。',
+        'supported_scenarios': ['high_rise_fire', 'chemical_leak', 'subway_fire'],
+        'capabilities': ['热成像侦察', '远程喷水/喷雾', '有毒环境替代人员抵近'],
+        'deployment_roles': ['近距侦察', '控火压制', '危险区替代作业'],
+    },
+    {
+        'id': 'drone',
+        'name': '无人机',
+        'category': '空中侦察平台',
+        'summary': '用于高空观察、外立面侦察、热源定位与现场回传。',
+        'supported_scenarios': ['high_rise_fire', 'flood_response', 'earthquake_rescue'],
+        'capabilities': ['高点态势回传', '外立面巡检', '搜索热源与受困目标'],
+        'deployment_roles': ['空中侦察', '态势建模', '高点通信辅助'],
+    },
+    {
+        'id': 'mesh_radio',
+        'name': '自组网通信设备',
+        'category': '通信保障',
+        'summary': '用于复杂建筑、地下空间和断网环境下的多点通信中继。',
+        'supported_scenarios': ['high_rise_fire', 'subway_fire', 'earthquake_rescue'],
+        'capabilities': ['无线中继', '前后方语音数据回传', '复杂空间覆盖'],
+        'deployment_roles': ['通信中继', '前后方联通', '态势共享'],
+    },
+    {
+        'id': 'ladder_truck',
+        'name': '举高喷射车',
+        'category': '灭火攻坚装备',
+        'summary': '用于高层外部攻坚、窗口救援和高位供水喷射。',
+        'supported_scenarios': ['high_rise_fire'],
+        'capabilities': ['高位喷射', '外部破拆救援', '高空观察'],
+        'deployment_roles': ['外围压制', '窗口救援', '高位灭火'],
+    },
+    {
+        'id': 'hazmat_team',
+        'name': '危化处置组',
+        'category': '专业作战力量',
+        'summary': '用于危化识别、堵漏、围控和污染扩散控制。',
+        'supported_scenarios': ['chemical_leak'],
+        'capabilities': ['介质侦检', '堵漏控源', '围堰与污染控制'],
+        'deployment_roles': ['危化侦检', '堵漏处置', '扩散控制'],
+    },
+    {
+        'id': 'decon_unit',
+        'name': '洗消单元',
+        'category': '洗消保障',
+        'summary': '用于人员、装备与区域洗消，闭合危化处置链路。',
+        'supported_scenarios': ['chemical_leak'],
+        'capabilities': ['人员洗消', '装备洗消', '污染区转运保障'],
+        'deployment_roles': ['洗消作业', '污染控制', '恢复保障'],
+    },
+]
 
 
 @dataclass
@@ -219,10 +278,16 @@ class SimulationEngine:
 
     def get_catalog(self) -> ScenarioCatalog:
         return ScenarioCatalog(
-            version='1.3.0',
+            version='1.4.0',
             supported_scenarios=SCENARIO_LABELS,
             supported_resources=RESOURCE_LABELS,
             severity_levels=SEVERITY_LABELS,
+        )
+
+    def get_equipment_library(self) -> EquipmentLibrary:
+        return EquipmentLibrary(
+            version='1.4.0',
+            items=[EquipmentItem(**item) for item in EQUIPMENT_LIBRARY],
         )
 
     def run(self, scenario: ScenarioInput) -> SimulationReport:

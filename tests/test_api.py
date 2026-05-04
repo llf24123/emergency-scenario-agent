@@ -62,6 +62,8 @@ def test_frontend_homepage_is_served():
     assert 'text/html' in response.headers['content-type']
     assert '应急场景推演 Agent 控制台' in response.text
     assert '生成推演报告' in response.text
+    assert '态势总览' in response.text
+    assert '装备库' in response.text
 
 
 
@@ -70,6 +72,20 @@ def test_frontend_javascript_is_served():
     assert response.status_code == 200
     assert 'application/javascript' in response.headers['content-type'] or 'text/javascript' in response.headers['content-type']
     assert 'simulate' in response.text
+    assert 'equipment-library' in response.text
+
+
+
+def test_equipment_library_endpoint_returns_catalog():
+    response = client.get('/equipment-library')
+    assert response.status_code == 200
+    data = response.json()
+    assert data['version']
+    assert data['items']
+    first_item = data['items'][0]
+    assert 'name' in first_item
+    assert 'category' in first_item
+    assert 'supported_scenarios' in first_item
 
 
 def test_simulate_llm_endpoint_returns_enhanced_payload(monkeypatch):

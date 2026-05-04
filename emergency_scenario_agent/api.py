@@ -7,9 +7,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .engine import SimulationEngine
-from .models import MarkdownReport, ScenarioCatalog, ScenarioInput, SimulationReport
+from .models import EquipmentLibrary, MarkdownReport, ScenarioCatalog, ScenarioInput, SimulationReport
 
-app = FastAPI(title='应急场景推演Agent', version='1.3.0')
+app = FastAPI(title='应急场景推演Agent', version='1.4.0')
 engine = SimulationEngine()
 frontend_dir = Path(__file__).parent / 'frontend'
 app.mount('/static', StaticFiles(directory=frontend_dir), name='static')
@@ -28,6 +28,11 @@ def health() -> dict[str, str]:
 @app.get('/catalog', response_model=ScenarioCatalog)
 def catalog() -> ScenarioCatalog:
     return engine.get_catalog()
+
+
+@app.get('/equipment-library', response_model=EquipmentLibrary)
+def equipment_library() -> EquipmentLibrary:
+    return engine.get_equipment_library()
 
 
 @app.post('/simulate', response_model=SimulationReport)

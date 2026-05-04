@@ -2,7 +2,7 @@
 
 一个面向 **消防 / 应急 / 安全处置** 场景的多 Agent 推演系统。它将输入的事故信息结构化后，交给多个职责清晰的 Agent 协同分析，输出可直接用于汇报、值守研判、演练准备或系统集成的推演结果。
 
-> 当前版本：**v1.3.0**
+> 当前版本：**v1.4.0**
 
 ---
 
@@ -17,9 +17,11 @@
   - 时间线 Agent
 - **支持 API 与 CLI 双入口**
 - **内置 Web 前端控制台**，可直接填写场景并查看结果
+- **新增前端态势总览页**，可查看预警、时间线与资源缺口
+- **新增装备库**，按场景查看装备能力、适用任务与部署角色
 - **支持 JSON / Markdown 两种输出**
 - **支持大模型增强模式**，可补充指挥简报、资源优化和对外沟通建议
-- **内置场景目录接口**，方便前端或第三方系统对接
+- **内置场景目录接口与装备库接口**，方便前端或第三方系统对接
 - **内置测试、Dockerfile、GitHub Actions CI**
 
 ---
@@ -109,6 +111,7 @@ python3 -m uvicorn emergency_scenario_agent.api:app --host 0.0.0.0 --port 8000
 - 前端控制台：`GET /`
 - 健康检查：`GET /health`
 - 场景目录：`GET /catalog`
+- 装备库：`GET /equipment-library`
 - JSON 推演：`POST /simulate`
 - LLM 增强推演：`POST /simulate/llm`
 - Markdown 推演：`POST /simulate/markdown`
@@ -121,7 +124,9 @@ python3 -m uvicorn emergency_scenario_agent.api:app --host 0.0.0.0 --port 8000
 
 - 直接填写场景参数
 - 一键载入高层火灾 / 危化泄漏示例
-- 同时查看摘要、风险、行动建议、资源建议、通信保障
+- 查看“推演结果”页：摘要、风险、行动建议、资源建议、通信保障
+- 查看“态势总览”页：关键预警、行动时间线、资源缺口
+- 查看“装备库”页：按场景筛选装备能力、部署角色与适用任务
 - 复制或下载 Markdown 报告
 - 实时查看 JSON 原始响应，便于系统联调
 
@@ -135,7 +140,13 @@ python3 -m uvicorn emergency_scenario_agent.api:app --host 0.0.0.0 --port 8000
 curl http://127.0.0.1:8000/catalog
 ```
 
-### 2）生成 JSON 推演报告
+### 2）查看装备库
+
+```bash
+curl http://127.0.0.1:8000/equipment-library
+```
+
+### 3）生成 JSON 推演报告
 
 ```bash
 curl -X POST http://127.0.0.1:8000/simulate \
@@ -143,7 +154,7 @@ curl -X POST http://127.0.0.1:8000/simulate \
   -d @examples/high_rise_fire.json
 ```
 
-### 3）生成 LLM 增强推演报告
+### 4）生成 LLM 增强推演报告
 
 ```bash
 curl -X POST http://127.0.0.1:8000/simulate/llm \
@@ -151,7 +162,7 @@ curl -X POST http://127.0.0.1:8000/simulate/llm \
   -d @examples/high_rise_fire.json
 ```
 
-### 4）生成 Markdown 推演报告
+### 5）生成 Markdown 推演报告
 
 ```bash
 curl -X POST http://127.0.0.1:8000/simulate/markdown \
@@ -223,6 +234,27 @@ export SCENARIO_AGENT_LLM_API_KEY=sk-xxxx
 
 这意味着即使上游模型偶发超时，系统也能继续输出可用结果。
 
+### Agent 如何接入大模型
+
+项目采用“**规则主链先跑，再由大模型做增强**”的接入方式：
+
+1. `SimulationEngine.run()` 先完成风险评估、策略研判、行动计划、资源调度、通信保障、时间线生成。
+2. `SimulationEngine.run_with_llm()` 再把 `scenario` 与 `rule_report` 交给 `OpenAICompatibleLLMClient`。
+3. `OpenAICompatibleLLMClient` 通过 OpenAI 兼容 `POST /chat/completions` 调用上游模型。
+4. 大模型只返回结构化增强字段：`executive_summary`、`command_brief`、`resource_optimization`、`public_communication`。
+5. 如果上游失败，系统自动回退到纯规则结果，不影响主流程。
+
+简化调用关系如下：
+
+```text
+结构化场景输入
+  -> SimulationEngine.run()
+  -> 规则报告 rule_report
+  -> OpenAICompatibleLLMClient.enhance_report()
+  -> llm_enhancement
+  -> 最终 JSON / Markdown / 前端态势页展示
+```
+
 ---
 
 ## 设计架构
@@ -285,12 +317,12 @@ docker run --rm -p 8000:8000 emergency-scenario-agent
 
 你可以基于这个项目继续扩展：
 
-1. **接入大模型**：生成更贴近真实指挥口径的研判说明
-2. **接入装备库**：从“推荐装备类别”升级到“推荐型号 + 数量 + 成本”
-3. **接入地图/建筑图纸**：做空间化推演
-4. **接入前端页面**：形成完整的态势推演平台
-5. **增加推演评分机制**：用于培训、演练与复盘
-6. **增加导出 Word / PDF**：直接形成汇报材料
+1. **接入地图/建筑图纸**：做空间化推演
+2. **增加推演评分机制**：用于培训、演练与复盘
+3. **增加导出 Word / PDF / PPT**：直接形成汇报材料
+4. **接入实时装备状态**：从静态装备库升级到库存、位置、数量联动
+5. **接入实时气象与视频流**：增强现场态势感知
+6. **增加高层灭火专项模型**：强化供水、排烟、机器人协同与自组网布点
 
 ---
 

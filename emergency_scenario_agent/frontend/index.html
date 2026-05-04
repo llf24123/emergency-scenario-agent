@@ -4,137 +4,232 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>应急场景推演 Agent 控制台</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #08090a;
-      --panel: #111214;
-      --panel-2: #15171a;
-      --surface: rgba(255,255,255,0.03);
-      --surface-2: rgba(255,255,255,0.05);
-      --border: rgba(255,255,255,0.08);
-      --text: #f7f8f8;
-      --muted: #aab2bf;
-      --soft: #7d8592;
-      --brand: #5e6ad2;
-      --brand-2: #7170ff;
-      --success: #10b981;
-      --danger: #ff6b6b;
+      --bg: #07111f;
+      --bg-2: #0c1728;
+      --panel: rgba(12, 23, 40, 0.88);
+      --panel-2: rgba(15, 29, 50, 0.95);
+      --surface: rgba(255,255,255,0.05);
+      --surface-2: rgba(255,255,255,0.08);
+      --border: rgba(150, 184, 255, 0.18);
+      --text: #ecf4ff;
+      --muted: #a5b6d2;
+      --soft: #7d91b2;
+      --brand: #40a9ff;
+      --brand-2: #6c63ff;
+      --cyan: #28d8c5;
+      --warn: #ffb648;
+      --danger: #ff6b7a;
+      --success: #29d391;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      font-feature-settings: 'cv01', 'ss03';
-      background: radial-gradient(circle at top, rgba(113,112,255,0.12), transparent 25%), var(--bg);
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
       color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(64, 169, 255, 0.2), transparent 24%),
+        radial-gradient(circle at 85% 15%, rgba(108, 99, 255, 0.18), transparent 22%),
+        linear-gradient(180deg, #08101c 0%, #0a1322 45%, #07111f 100%);
     }
-    .shell { max-width: 1440px; margin: 0 auto; padding: 32px 24px 48px; }
+    .shell { max-width: 1500px; margin: 0 auto; padding: 24px; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-mark {
+      width: 44px; height: 44px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      display: grid; place-items: center; font-weight: 700; box-shadow: var(--shadow);
+    }
+    .brand-text h1 { margin: 0; font-size: 22px; }
+    .brand-text p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .pill-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pill {
+      padding: 9px 12px; border-radius: 999px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04); color: var(--muted); font-size: 12px;
+    }
     .hero {
-      display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: stretch; margin-bottom: 24px;
+      display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 18px;
     }
-    .hero-card, .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      backdrop-filter: blur(10px);
-      box-shadow: rgba(0,0,0,0.22) 0 10px 30px;
+    .panel {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 22px;
+      box-shadow: var(--shadow); backdrop-filter: blur(16px);
     }
-    .hero-card { padding: 28px; }
-    h1 {
-      margin: 0 0 16px;
-      font-size: 44px;
-      line-height: 1;
-      letter-spacing: -1px;
-      font-weight: 600;
+    .hero-main { padding: 28px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px;
+      padding: 7px 12px; border-radius: 999px; background: rgba(64, 169, 255, 0.12);
+      border: 1px solid rgba(64, 169, 255, 0.25); color: #bfdeff; font-size: 12px;
     }
-    .lead { color: var(--muted); font-size: 17px; line-height: 1.75; margin-bottom: 20px; }
-    .badge-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .badge {
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 12px;
+    .hero-main h2 { margin: 0 0 14px; font-size: 42px; line-height: 1.05; letter-spacing: -1.2px; }
+    .hero-main p { margin: 0; color: var(--muted); line-height: 1.8; font-size: 15px; }
+    .hero-grid {
+      margin-top: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
     }
-    .stats { padding: 24px; display: grid; gap: 14px; }
-    .stat {
-      padding: 16px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+    .mini-card {
+      padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
     }
-    .stat .label { font-size: 12px; color: var(--soft); margin-bottom: 8px; }
-    .stat .value { font-size: 24px; font-weight: 600; letter-spacing: -0.4px; }
-    .grid { display: grid; grid-template-columns: 420px 1fr; gap: 24px; }
-    .panel { padding: 22px; }
-    .panel h2 { margin: 0 0 18px; font-size: 20px; }
+    .mini-card .label { color: var(--soft); font-size: 12px; margin-bottom: 6px; }
+    .mini-card .value { font-size: 20px; font-weight: 700; }
+    .hero-side { padding: 24px; display: grid; gap: 12px; }
+    .status-board {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    }
+    .status-item {
+      padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .status-item .k { color: var(--soft); font-size: 12px; }
+    .status-item .v { margin-top: 8px; font-size: 18px; font-weight: 600; }
+    .layout {
+      display: grid; grid-template-columns: 430px 1fr; gap: 18px;
+    }
+    .panel-body { padding: 22px; }
+    .panel-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .panel-title h3 { margin: 0; font-size: 20px; }
+    .subtle { color: var(--muted); font-size: 13px; }
     .form-grid { display: grid; gap: 14px; }
-    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
     input, select, textarea {
-      width: 100%; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.02);
-      color: var(--text); padding: 12px 14px; outline: none; font-size: 14px;
+      width: 100%; border-radius: 14px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04); color: var(--text); padding: 12px 14px; font-size: 14px;
+      outline: none;
     }
     textarea { min-height: 96px; resize: vertical; }
-    input:focus, select:focus, textarea:focus { border-color: rgba(113,112,255,0.9); box-shadow: 0 0 0 3px rgba(113,112,255,0.18); }
-    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .actions { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(64, 169, 255, 0.8); box-shadow: 0 0 0 3px rgba(64, 169, 255, 0.16);
+    }
+    .actions, .inline-actions { display: flex; gap: 10px; flex-wrap: wrap; }
     button {
-      border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 600;
-      transition: transform .15s ease, opacity .15s ease, background .15s ease;
+      border: none; border-radius: 14px; padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 600;
+      transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
     }
     button:hover { transform: translateY(-1px); }
-    .primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; }
-    .ghost { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--border); }
-    .results { display: grid; gap: 16px; }
-    .toolbar { display:flex; gap: 10px; justify-content: space-between; align-items:center; flex-wrap:wrap; }
-    .toolbar .chips { display:flex; gap: 8px; flex-wrap: wrap; }
-    .chip { background: rgba(94,106,210,0.12); border:1px solid rgba(113,112,255,0.22); color:#c7ccff; border-radius:999px; padding:7px 10px; font-size:12px; }
-    .output-card { padding: 18px; border-radius: 16px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); }
-    .output-card h3 { margin: 0 0 14px; font-size: 16px; }
-    .meta { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .meta .box { padding: 12px; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius: 12px; }
-    .meta .k { color: var(--soft); font-size: 12px; margin-bottom: 6px; }
-    .meta .v { font-size: 15px; line-height: 1.5; }
-    .list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.8; }
-    pre {
-      margin: 0; white-space: pre-wrap; word-break: break-word; font-family: 'JetBrains Mono', monospace;
-      font-size: 12px; line-height: 1.65; color: #d7deea;
+    .primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; }
+    .ghost {
+      background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border);
     }
-    .markdown {
-      white-space: pre-wrap; font-size: 14px; color: var(--muted); line-height: 1.8;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    .checkbox-row {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
     }
-    .status { font-size: 13px; color: var(--soft); }
+    .checkbox-row input { width: auto; accent-color: var(--brand); }
+    .status { color: var(--soft); font-size: 13px; }
     .status.ok { color: var(--success); }
     .status.err { color: var(--danger); }
-    @media (max-width: 1100px) {
-      .hero, .grid { grid-template-columns: 1fr; }
-      .meta { grid-template-columns: 1fr; }
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab {
+      padding: 10px 14px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,0.04);
+      color: var(--muted);
+    }
+    .tab.active { color: #fff; background: rgba(64,169,255,0.16); border-color: rgba(64,169,255,0.3); }
+    .view { display: none; }
+    .view.active { display: block; }
+    .cards { display: grid; gap: 14px; }
+    .card {
+      padding: 18px; border-radius: 18px; background: var(--panel-2); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .card h4 { margin: 0 0 14px; font-size: 16px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .meta-box {
+      padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .meta-box .k { color: var(--soft); font-size: 12px; margin-bottom: 6px; }
+    .meta-box .v { font-size: 15px; line-height: 1.7; }
+    .list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.8; }
+    .alert-list, .timeline-grid, .equipment-grid {
+      display: grid; gap: 12px;
+    }
+    .alert-item, .timeline-item, .equipment-card {
+      padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .alert-item strong, .timeline-item strong, .equipment-card strong { display: block; margin-bottom: 8px; }
+    .equipment-toolbar {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .equipment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .equipment-tags, .role-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .tag {
+      padding: 5px 9px; border-radius: 999px; font-size: 12px; background: rgba(40, 216, 197, 0.12);
+      border: 1px solid rgba(40, 216, 197, 0.24); color: #b9fff6;
+    }
+    .tag.warn { background: rgba(255, 182, 72, 0.12); border-color: rgba(255, 182, 72, 0.24); color: #ffe4b2; }
+    .markdown, pre {
+      margin: 0; white-space: pre-wrap; word-break: break-word; font-family: 'JetBrains Mono', monospace;
+      color: #dbe7ff; line-height: 1.7; font-size: 12.5px;
+    }
+    .markdown { font-size: 13px; }
+    .footer-note { color: var(--soft); font-size: 12px; }
+    @media (max-width: 1200px) {
+      .hero, .layout, .meta-grid, .equipment-grid { grid-template-columns: 1fr; }
+      .hero-grid, .status-board { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 760px) {
+      .shell { padding: 16px; }
+      .hero-main h2 { font-size: 30px; }
+      .hero-grid, .status-board, .two { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="shell">
-    <section class="hero">
-      <div class="hero-card">
-        <h1>应急场景推演 Agent 控制台</h1>
-        <div class="lead">输入高层火灾、危化品泄漏、地铁火灾等场景要素，前端会直接调用后端多 Agent 推演引擎，输出结构化战术建议、行动计划、资源调度、通信保障与 Markdown 报告。</div>
-        <div class="badge-row">
-          <span class="badge">多 Agent 协同</span>
-          <span class="badge">JSON / Markdown 双输出</span>
-          <span class="badge">FastAPI + 原生前端</span>
-          <span class="badge">适合汇报 / 演练 / 指挥辅助</span>
+    <section class="topbar">
+      <div class="brand">
+        <div class="brand-mark">EA</div>
+        <div class="brand-text">
+          <h1>应急场景推演 Agent</h1>
+          <p>多 Agent 推演 · 大模型增强 · 态势页 · 装备库</p>
         </div>
       </div>
-      <div class="hero-card stats">
-        <div class="stat"><div class="label">支持场景</div><div class="value" id="supported-count">加载中…</div></div>
-        <div class="stat"><div class="label">API 端点</div><div class="value">/simulate · /simulate/markdown</div></div>
-        <div class="stat"><div class="label">推荐用途</div><div class="value">应急预案推演 / 机器人调度 / 汇报生成</div></div>
+      <div class="pill-row">
+        <span class="pill">规则保底 + LLM 增强</span>
+        <span class="pill">态势总览</span>
+        <span class="pill">装备库</span>
+        <span class="pill">Markdown / JSON 导出</span>
       </div>
     </section>
 
-    <section class="grid">
-      <div class="card panel">
-        <h2>生成推演报告</h2>
+    <section class="hero">
+      <div class="panel hero-main">
+        <div class="eyebrow">场景录入 → 推演编排 → 指挥摘要 → 装备建议</div>
+        <h2>把零散事故信息，变成可执行的应急处置方案。</h2>
+        <p>
+          页面已升级为更完整的前端控制台：左侧录入场景，右侧查看推演结果；同时新增“态势总览”页面用于快速查看风险、资源缺口和时间线，新增“装备库”用于展示装备能力与适用场景。
+        </p>
+        <div class="hero-grid">
+          <div class="mini-card"><div class="label">支持场景</div><div class="value" id="supported-count">加载中</div></div>
+          <div class="mini-card"><div class="label">装备条目</div><div class="value" id="equipment-count">加载中</div></div>
+          <div class="mini-card"><div class="label">默认模式</div><div class="value">多 Agent + LLM</div></div>
+          <div class="mini-card"><div class="label">输出形式</div><div class="value">JSON / Markdown</div></div>
+        </div>
+      </div>
+      <div class="panel hero-side">
+        <div class="panel-title"><h3>运行状态</h3><span class="subtle">面向实战演练与方案汇报</span></div>
+        <div class="status-board">
+          <div class="status-item"><div class="k">当前场景</div><div class="v" id="status-scenario">未加载</div></div>
+          <div class="status-item"><div class="k">LLM 状态</div><div class="v" id="llm-status-hero">not_requested</div></div>
+          <div class="status-item"><div class="k">被困人数</div><div class="v" id="hero-people">0 人</div></div>
+          <div class="status-item"><div class="k">影响区域</div><div class="v" id="hero-affected">未录入</div></div>
+        </div>
+        <div class="card">
+          <h4 style="margin-top:0;">当前说明</h4>
+          <div class="footer-note">未启用或调用失败时，系统会自动回退到规则推演结果，保证前端态势页仍可正常显示。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="panel panel-body">
+        <div class="panel-title">
+          <h3>生成推演报告</h3>
+          <span class="subtle">支持高层火灾 / 危化泄漏等典型场景</span>
+        </div>
         <form id="scenario-form" class="form-grid">
           <div>
             <label for="scenario_type">场景类型</label>
@@ -169,7 +264,7 @@
             </div>
           </div>
           <div>
-            <label for="floors_affected">影响楼层（逗号分隔）</label>
+            <label for="floors_affected">影响楼层 / 区域（逗号分隔）</label>
             <input id="floors_affected" name="floors_affected" value="18,19,20" />
           </div>
           <div>
@@ -180,79 +275,119 @@
             <label for="available_resources">可用资源（逗号分隔）</label>
             <textarea id="available_resources" name="available_resources">fire_robot,drone,mesh_radio</textarea>
           </div>
+          <div class="checkbox-row">
+            <input id="use_llm" name="use_llm" type="checkbox" checked />
+            <label for="use_llm" style="margin:0;color:var(--text);">启用大模型增强（生成摘要 / 指挥简报 / 对外沟通建议）</label>
+          </div>
           <div class="actions">
             <button type="submit" class="primary">生成推演报告</button>
             <button type="button" class="ghost" id="load-highrise">载入高层火灾示例</button>
             <button type="button" class="ghost" id="load-chemical">载入危化泄漏示例</button>
           </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-            <input id="use_llm" name="use_llm" type="checkbox" checked style="width:auto;accent-color:#7170ff;" />
-            <label for="use_llm" style="margin:0;color:var(--text);font-size:14px;">启用大模型增强（生成指挥简报 / 资源优化 / 对外沟通建议）</label>
-          </div>
           <div id="status" class="status">等待输入并生成。</div>
         </form>
       </div>
 
-      <div class="card panel">
-        <div class="toolbar">
-          <h2 style="margin:0">推演结果</h2>
-          <div class="chips">
-            <span class="chip">结构化输出</span>
-            <span class="chip">Markdown 导出</span>
-            <span class="chip">适配演练汇报</span>
+      <div class="panel panel-body">
+        <div class="panel-title">
+          <h3>指挥控制台</h3>
+          <div class="tabs">
+            <button type="button" class="tab active" data-tab="result">推演结果</button>
+            <button type="button" class="tab" data-tab="situation">态势总览</button>
+            <button type="button" class="tab" data-tab="equipment">装备库</button>
           </div>
         </div>
 
-        <div class="results">
-          <div class="output-card">
-            <h3>事件摘要</h3>
-            <div class="meta">
-              <div class="box"><div class="k">场景</div><div class="v" id="summary-scenario">—</div></div>
-              <div class="box"><div class="k">等级</div><div class="v" id="summary-level">—</div></div>
-              <div class="box"><div class="k">总策略</div><div class="v" id="summary-strategy">—</div></div>
+        <div class="view active" data-view="result">
+          <div class="cards">
+            <div class="card">
+              <h4>事件摘要</h4>
+              <div class="meta-grid">
+                <div class="meta-box"><div class="k">场景</div><div class="v" id="summary-scenario">—</div></div>
+                <div class="meta-box"><div class="k">等级</div><div class="v" id="summary-level">—</div></div>
+                <div class="meta-box"><div class="k">总策略</div><div class="v" id="summary-strategy">—</div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>关键风险</h4>
+              <ul class="list" id="risk-list"></ul>
+            </div>
+
+            <div class="card">
+              <h4>行动 / 资源 / 通信</h4>
+              <div class="meta-grid">
+                <div class="meta-box"><div class="k">立即行动</div><ul class="list" id="immediate-list"></ul></div>
+                <div class="meta-box"><div class="k">资源建议</div><ul class="list" id="resource-list"></ul></div>
+                <div class="meta-box"><div class="k">通信保障</div><ul class="list" id="comm-list"></ul></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="panel-title" style="margin-bottom:12px;"><h4 style="margin:0;">Markdown 报告</h4><div class="inline-actions"><button type="button" class="ghost" id="copy-markdown">复制 Markdown</button><button type="button" class="ghost" id="download-markdown">下载 .md</button></div></div>
+              <div class="markdown" id="markdown-output">还没有生成 Markdown 报告。</div>
+            </div>
+
+            <div class="card">
+              <h4>大模型增强</h4>
+              <div class="meta-grid">
+                <div class="meta-box"><div class="k">LLM 状态</div><div class="v" id="llm-status">未启用</div></div>
+                <div class="meta-box"><div class="k">增强摘要</div><div class="v" id="llm-summary">—</div></div>
+                <div class="meta-box"><div class="k">对外沟通</div><ul class="list" id="llm-public-list"></ul></div>
+              </div>
+              <div class="meta-grid" style="margin-top:12px;">
+                <div class="meta-box"><div class="k">指挥简报</div><ul class="list" id="llm-command-list"></ul></div>
+                <div class="meta-box"><div class="k">资源优化</div><ul class="list" id="llm-resource-list"></ul></div>
+                <div class="meta-box"><div class="k">说明</div><div class="v">增强层用于补充更适合汇报与指挥展示的内容，不替代规则推演主链。</div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>JSON 响应</h4>
+              <pre id="json-output">{}</pre>
             </div>
           </div>
+        </div>
 
-          <div class="output-card">
-            <h3>关键风险</h3>
-            <ul class="list" id="risk-list"></ul>
-          </div>
-
-          <div class="output-card">
-            <h3>行动 / 资源 / 通信</h3>
-            <div class="meta">
-              <div class="box"><div class="k">立即行动</div><ul class="list" id="immediate-list"></ul></div>
-              <div class="box"><div class="k">资源建议</div><ul class="list" id="resource-list"></ul></div>
-              <div class="box"><div class="k">通信保障</div><ul class="list" id="comm-list"></ul></div>
+        <div class="view" data-view="situation">
+          <div class="cards">
+            <div class="card">
+              <h4>态势总览</h4>
+              <div class="meta-grid">
+                <div class="meta-box"><div class="k">指挥模式</div><div class="v" id="situation-command-mode">—</div></div>
+                <div class="meta-box"><div class="k">报送频率</div><div class="v" id="situation-reporting">—</div></div>
+                <div class="meta-box"><div class="k">能力缺口</div><div class="v" id="situation-gap-count">0 项</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>关键预警</h4>
+              <div class="alert-list" id="alert-list"></div>
+            </div>
+            <div class="card">
+              <h4>行动时间线</h4>
+              <div class="timeline-grid" id="timeline-grid"></div>
+            </div>
+            <div class="card">
+              <h4>资源缺口与建议补位</h4>
+              <div class="alert-list" id="gap-list"></div>
             </div>
           </div>
+        </div>
 
-          <div class="output-card">
-            <h3>Markdown 报告</h3>
-            <div class="actions" style="margin-bottom: 14px;">
-              <button type="button" class="ghost" id="copy-markdown">复制 Markdown</button>
-              <button type="button" class="ghost" id="download-markdown">下载 .md</button>
+        <div class="view" data-view="equipment">
+          <div class="card">
+            <div class="equipment-toolbar">
+              <div>
+                <h4 style="margin:0 0 6px;">装备库</h4>
+                <div class="subtle">按当前场景筛选适配装备，并查看能力、适用任务与部署角色。</div>
+              </div>
+              <div class="inline-actions">
+                <select id="equipment-filter"></select>
+                <button type="button" class="ghost" id="show-recommended-equipment">只看当前推荐</button>
+                <button type="button" class="ghost" id="show-all-equipment">查看全部</button>
+              </div>
             </div>
-            <div class="markdown" id="markdown-output">还没有生成 Markdown 报告。</div>
-          </div>
-
-          <div class="output-card">
-            <h3>大模型增强</h3>
-            <div class="meta">
-              <div class="box"><div class="k">LLM 状态</div><div class="v" id="llm-status">未启用</div></div>
-              <div class="box"><div class="k">增强摘要</div><div class="v" id="llm-summary">—</div></div>
-              <div class="box"><div class="k">对外沟通</div><ul class="list" id="llm-public-list"></ul></div>
-            </div>
-            <div class="meta" style="margin-top:10px;">
-              <div class="box"><div class="k">指挥简报</div><ul class="list" id="llm-command-list"></ul></div>
-              <div class="box"><div class="k">资源优化</div><ul class="list" id="llm-resource-list"></ul></div>
-              <div class="box"><div class="k">说明</div><div class="v">未启用或调用失败时，系统会自动回退到规则引擎结果。</div></div>
-            </div>
-          </div>
-
-          <div class="output-card">
-            <h3>JSON 响应</h3>
-            <pre id="json-output">{}</pre>
+            <div class="equipment-grid" id="equipment-grid"></div>
           </div>
         </div>
       </div>
