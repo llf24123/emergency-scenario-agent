@@ -1,12 +1,23 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .engine import SimulationEngine
 from .models import MarkdownReport, ScenarioCatalog, ScenarioInput, SimulationReport
 
-app = FastAPI(title='应急场景推演Agent', version='1.1.0')
+app = FastAPI(title='应急场景推演Agent', version='1.2.0')
 engine = SimulationEngine()
+frontend_dir = Path(__file__).parent / 'frontend'
+app.mount('/static', StaticFiles(directory=frontend_dir), name='static')
+
+
+@app.get('/')
+def frontend_home() -> FileResponse:
+    return FileResponse(frontend_dir / 'index.html')
 
 
 @app.get('/health')

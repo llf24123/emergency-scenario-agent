@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>应急场景推演 Agent 控制台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08090a;
+      --panel: #111214;
+      --panel-2: #15171a;
+      --surface: rgba(255,255,255,0.03);
+      --surface-2: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.08);
+      --text: #f7f8f8;
+      --muted: #aab2bf;
+      --soft: #7d8592;
+      --brand: #5e6ad2;
+      --brand-2: #7170ff;
+      --success: #10b981;
+      --danger: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-feature-settings: 'cv01', 'ss03';
+      background: radial-gradient(circle at top, rgba(113,112,255,0.12), transparent 25%), var(--bg);
+      color: var(--text);
+    }
+    .shell { max-width: 1440px; margin: 0 auto; padding: 32px 24px 48px; }
+    .hero {
+      display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: stretch; margin-bottom: 24px;
+    }
+    .hero-card, .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      box-shadow: rgba(0,0,0,0.22) 0 10px 30px;
+    }
+    .hero-card { padding: 28px; }
+    h1 {
+      margin: 0 0 16px;
+      font-size: 44px;
+      line-height: 1;
+      letter-spacing: -1px;
+      font-weight: 600;
+    }
+    .lead { color: var(--muted); font-size: 17px; line-height: 1.75; margin-bottom: 20px; }
+    .badge-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .badge {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    .stats { padding: 24px; display: grid; gap: 14px; }
+    .stat {
+      padding: 16px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+    }
+    .stat .label { font-size: 12px; color: var(--soft); margin-bottom: 8px; }
+    .stat .value { font-size: 24px; font-weight: 600; letter-spacing: -0.4px; }
+    .grid { display: grid; grid-template-columns: 420px 1fr; gap: 24px; }
+    .panel { padding: 22px; }
+    .panel h2 { margin: 0 0 18px; font-size: 20px; }
+    .form-grid { display: grid; gap: 14px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    input, select, textarea {
+      width: 100%; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.02);
+      color: var(--text); padding: 12px 14px; outline: none; font-size: 14px;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: rgba(113,112,255,0.9); box-shadow: 0 0 0 3px rgba(113,112,255,0.18); }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .actions { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+    button {
+      border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 600;
+      transition: transform .15s ease, opacity .15s ease, background .15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    .primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; }
+    .ghost { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--border); }
+    .results { display: grid; gap: 16px; }
+    .toolbar { display:flex; gap: 10px; justify-content: space-between; align-items:center; flex-wrap:wrap; }
+    .toolbar .chips { display:flex; gap: 8px; flex-wrap: wrap; }
+    .chip { background: rgba(94,106,210,0.12); border:1px solid rgba(113,112,255,0.22); color:#c7ccff; border-radius:999px; padding:7px 10px; font-size:12px; }
+    .output-card { padding: 18px; border-radius: 16px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); }
+    .output-card h3 { margin: 0 0 14px; font-size: 16px; }
+    .meta { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .meta .box { padding: 12px; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius: 12px; }
+    .meta .k { color: var(--soft); font-size: 12px; margin-bottom: 6px; }
+    .meta .v { font-size: 15px; line-height: 1.5; }
+    .list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.8; }
+    pre {
+      margin: 0; white-space: pre-wrap; word-break: break-word; font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; line-height: 1.65; color: #d7deea;
+    }
+    .markdown {
+      white-space: pre-wrap; font-size: 14px; color: var(--muted); line-height: 1.8;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    .status { font-size: 13px; color: var(--soft); }
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--danger); }
+    @media (max-width: 1100px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+      .meta { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-card">
+        <h1>应急场景推演 Agent 控制台</h1>
+        <div class="lead">输入高层火灾、危化品泄漏、地铁火灾等场景要素，前端会直接调用后端多 Agent 推演引擎，输出结构化战术建议、行动计划、资源调度、通信保障与 Markdown 报告。</div>
+        <div class="badge-row">
+          <span class="badge">多 Agent 协同</span>
+          <span class="badge">JSON / Markdown 双输出</span>
+          <span class="badge">FastAPI + 原生前端</span>
+          <span class="badge">适合汇报 / 演练 / 指挥辅助</span>
+        </div>
+      </div>
+      <div class="hero-card stats">
+        <div class="stat"><div class="label">支持场景</div><div class="value" id="supported-count">加载中…</div></div>
+        <div class="stat"><div class="label">API 端点</div><div class="value">/simulate · /simulate/markdown</div></div>
+        <div class="stat"><div class="label">推荐用途</div><div class="value">应急预案推演 / 机器人调度 / 汇报生成</div></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card panel">
+        <h2>生成推演报告</h2>
+        <form id="scenario-form" class="form-grid">
+          <div>
+            <label for="scenario_type">场景类型</label>
+            <select id="scenario_type" name="scenario_type"></select>
+          </div>
+          <div>
+            <label for="location_type">地点类型</label>
+            <input id="location_type" name="location_type" value="residential_tower" />
+          </div>
+          <div class="two">
+            <div>
+              <label for="severity">严重级别</label>
+              <select id="severity" name="severity">
+                <option value="medium">medium</option>
+                <option value="high" selected>high</option>
+                <option value="critical">critical</option>
+              </select>
+            </div>
+            <div>
+              <label for="time_of_day">时间</label>
+              <input id="time_of_day" name="time_of_day" value="night" />
+            </div>
+          </div>
+          <div class="two">
+            <div>
+              <label for="weather">天气</label>
+              <input id="weather" name="weather" value="windy" />
+            </div>
+            <div>
+              <label for="people_trapped">被困人数</label>
+              <input id="people_trapped" name="people_trapped" type="number" min="0" value="8" />
+            </div>
+          </div>
+          <div>
+            <label for="floors_affected">影响楼层（逗号分隔）</label>
+            <input id="floors_affected" name="floors_affected" value="18,19,20" />
+          </div>
+          <div>
+            <label for="hazards">危险因素（逗号分隔）</label>
+            <input id="hazards" name="hazards" value="smoke,power_outage" />
+          </div>
+          <div>
+            <label for="available_resources">可用资源（逗号分隔）</label>
+            <textarea id="available_resources" name="available_resources">fire_robot,drone,mesh_radio</textarea>
+          </div>
+          <div class="actions">
+            <button type="submit" class="primary">生成推演报告</button>
+            <button type="button" class="ghost" id="load-highrise">载入高层火灾示例</button>
+            <button type="button" class="ghost" id="load-chemical">载入危化泄漏示例</button>
+          </div>
+          <div id="status" class="status">等待输入并生成。</div>
+        </form>
+      </div>
+
+      <div class="card panel">
+        <div class="toolbar">
+          <h2 style="margin:0">推演结果</h2>
+          <div class="chips">
+            <span class="chip">结构化输出</span>
+            <span class="chip">Markdown 导出</span>
+            <span class="chip">适配演练汇报</span>
+          </div>
+        </div>
+
+        <div class="results">
+          <div class="output-card">
+            <h3>事件摘要</h3>
+            <div class="meta">
+              <div class="box"><div class="k">场景</div><div class="v" id="summary-scenario">—</div></div>
+              <div class="box"><div class="k">等级</div><div class="v" id="summary-level">—</div></div>
+              <div class="box"><div class="k">总策略</div><div class="v" id="summary-strategy">—</div></div>
+            </div>
+          </div>
+
+          <div class="output-card">
+            <h3>关键风险</h3>
+            <ul class="list" id="risk-list"></ul>
+          </div>
+
+          <div class="output-card">
+            <h3>行动 / 资源 / 通信</h3>
+            <div class="meta">
+              <div class="box"><div class="k">立即行动</div><ul class="list" id="immediate-list"></ul></div>
+              <div class="box"><div class="k">资源建议</div><ul class="list" id="resource-list"></ul></div>
+              <div class="box"><div class="k">通信保障</div><ul class="list" id="comm-list"></ul></div>
+            </div>
+          </div>
+
+          <div class="output-card">
+            <h3>Markdown 报告</h3>
+            <div class="actions" style="margin-bottom: 14px;">
+              <button type="button" class="ghost" id="copy-markdown">复制 Markdown</button>
+              <button type="button" class="ghost" id="download-markdown">下载 .md</button>
+            </div>
+            <div class="markdown" id="markdown-output">还没有生成 Markdown 报告。</div>
+          </div>
+
+          <div class="output-card">
+            <h3>JSON 响应</h3>
+            <pre id="json-output">{}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

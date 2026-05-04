@@ -2,7 +2,7 @@
 
 一个面向 **消防 / 应急 / 安全处置** 场景的多 Agent 推演系统。它将输入的事故信息结构化后，交给多个职责清晰的 Agent 协同分析，输出可直接用于汇报、值守研判、演练准备或系统集成的推演结果。
 
-> 当前版本：**v1.1.0**
+> 当前版本：**v1.2.0**
 
 ---
 
@@ -16,6 +16,7 @@
   - 通信保障 Agent
   - 时间线 Agent
 - **支持 API 与 CLI 双入口**
+- **内置 Web 前端控制台**，可直接填写场景并查看结果
 - **支持 JSON / Markdown 两种输出**
 - **内置场景目录接口**，方便前端或第三方系统对接
 - **内置测试、Dockerfile、GitHub Actions CI**
@@ -55,6 +56,9 @@
 emergency_scenario_agent/
 ├── .github/workflows/ci.yml
 ├── emergency_scenario_agent/
+│   ├── frontend/
+│   │   ├── app.js
+│   │   └── index.html
 │   ├── __init__.py
 │   ├── api.py
 │   ├── cli.py
@@ -101,11 +105,22 @@ python3 -m uvicorn emergency_scenario_agent.api:app --host 0.0.0.0 --port 8000
 
 启动后可访问：
 
+- 前端控制台：`GET /`
 - 健康检查：`GET /health`
 - 场景目录：`GET /catalog`
 - JSON 推演：`POST /simulate`
 - Markdown 推演：`POST /simulate/markdown`
 - Swagger 文档：`http://127.0.0.1:8000/docs`
+
+### 前端控制台说明
+
+打开 `http://127.0.0.1:8000/` 后，你可以：
+
+- 直接填写场景参数
+- 一键载入高层火灾 / 危化泄漏示例
+- 同时查看摘要、风险、行动建议、资源建议、通信保障
+- 复制或下载 Markdown 报告
+- 实时查看 JSON 原始响应，便于系统联调
 
 ---
 

@@ -54,3 +54,19 @@ def test_simulate_markdown_endpoint_returns_text_report():
     data = response.json()
     assert data['format'] == 'markdown'
     assert '危化品泄漏' in data['content']
+
+
+def test_frontend_homepage_is_served():
+    response = client.get('/')
+    assert response.status_code == 200
+    assert 'text/html' in response.headers['content-type']
+    assert '应急场景推演 Agent 控制台' in response.text
+    assert '生成推演报告' in response.text
+
+
+
+def test_frontend_javascript_is_served():
+    response = client.get('/static/app.js')
+    assert response.status_code == 200
+    assert 'application/javascript' in response.headers['content-type'] or 'text/javascript' in response.headers['content-type']
+    assert 'simulate' in response.text

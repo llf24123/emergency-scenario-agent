@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "emergency-scenario-agent"
-version = "1.1.0"
+version = "1.2.0"
 description = "基于多 Agent 分工的应急场景推演系统"
 readme = "README.md"
 license = { text = "MIT" }
@@ -28,6 +28,9 @@ Issues = "https://github.com/llf24123/emergency-scenario-agent/issues"
 
 [project.scripts]
 emergency-scenario-agent = "emergency_scenario_agent.cli:main"
+
+[tool.setuptools.package-data]
+emergency_scenario_agent = ["frontend/*.html", "frontend/*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
