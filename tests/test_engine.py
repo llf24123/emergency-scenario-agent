@@ -38,7 +38,8 @@ def test_equipment_library_includes_cost_and_quantity_metadata():
     assert first.unit_cost_rmb > 0
     assert first.recommended_quantity > 0
     assert first.recommended_tasks
-    assert len(library.items) >= 12
+    assert len(library.items) >= 18
+    assert len({item.category for item in library.items}) >= 8
 
 
 def test_chemical_leak_adds_decontamination_action():
@@ -60,6 +61,34 @@ def test_chemical_leak_adds_decontamination_action():
     combined_actions = result.action_plan.immediate_actions + result.action_plan.stabilization_actions
     assert any("洗消" in item for item in combined_actions)
     assert any("警戒" in item for item in result.action_plan.immediate_actions)
+
+
+def test_high_rise_fire_generates_equipment_budget_plan():
+    engine = SimulationEngine()
+    scenario = ScenarioInput(
+        scenario_type="high_rise_fire",
+        location_type="residential_tower",
+        severity="high",
+        weather="windy",
+        time_of_day="night",
+        people_trapped=10,
+        floors_affected=[18, 19, 20],
+        hazards=["smoke", "power_outage"],
+        available_resources=["fire_robot", "mesh_radio", "drone"],
+    )
+
+    result = engine.run(scenario)
+
+    assert result.equipment_budget_plan.scenario_type == "high_rise_fire"
+    assert result.equipment_budget_plan.scenario_type_label == "高层火灾"
+    assert result.equipment_budget_plan.total_estimated_budget_rmb > 0
+    assert result.equipment_budget_plan.total_recommended_quantity >= 3
+    assert len(result.equipment_budget_plan.items) >= 3
+    assert any(item.name == "消防机器人" for item in result.equipment_budget_plan.items)
+    fire_robot = next(item for item in result.equipment_budget_plan.items if item.name == "消防机器人")
+    assert fire_robot.estimated_budget_rmb == fire_robot.unit_cost_rmb * fire_robot.recommended_quantity
+    assert fire_robot.reason
+    assert result.equipment_budget_plan.procurement_advice
 
 
 def test_report_can_render_markdown():

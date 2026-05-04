@@ -75,6 +75,7 @@ class SimulationReport(BaseModel):
     timeline: list[TimelineStep]
     task_zones: list[TaskZone]
     assumptions: list[str]
+    equipment_budget_plan: 'ScenarioEquipmentBudgetPlan'
     llm_status: str = 'not_requested'
     llm_enhancement: 'LLMEnhancement | None' = None
 
@@ -106,6 +107,27 @@ class EquipmentItem(BaseModel):
     unit_cost_rmb: int = Field(..., ge=0)
     recommended_quantity: int = Field(..., ge=1)
     recommended_tasks: list[str]
+
+
+class ScenarioEquipmentPlanItem(BaseModel):
+    id: str
+    name: str
+    category: str
+    models: list[str]
+    recommended_quantity: int = Field(..., ge=1)
+    unit_cost_rmb: int = Field(..., ge=0)
+    estimated_budget_rmb: int = Field(..., ge=0)
+    reason: str
+    recommended_tasks: list[str]
+
+
+class ScenarioEquipmentBudgetPlan(BaseModel):
+    scenario_type: ScenarioType
+    scenario_type_label: str
+    total_recommended_quantity: int = Field(..., ge=0)
+    total_estimated_budget_rmb: int = Field(..., ge=0)
+    items: list[ScenarioEquipmentPlanItem]
+    procurement_advice: list[str]
 
 
 class EquipmentLibrary(BaseModel):

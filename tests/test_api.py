@@ -25,6 +25,9 @@ def test_simulate_endpoint_returns_report():
     assert data['summary']['scenario_type_label'] == '高层火灾'
     assert len(data['timeline']) >= 3
     assert data['resource_plan']['dispatch_priority'][0]
+    assert data['equipment_budget_plan']['scenario_type'] == 'high_rise_fire'
+    assert data['equipment_budget_plan']['total_estimated_budget_rmb'] > 0
+    assert data['equipment_budget_plan']['items']
 
 
 def test_catalog_endpoint_lists_supported_scenarios():
@@ -76,6 +79,12 @@ def test_frontend_homepage_is_served():
     assert '运行总览' in response.text
     assert '核心指标' in response.text
     assert '指挥态势大屏' in response.text
+    assert '装备检索' in response.text
+    assert '预算汇总' in response.text
+    assert '类别筛选' in response.text
+    assert '任务筛选' in response.text
+    assert '场景推荐清单' in response.text
+    assert '采购建议' in response.text
 
 
 
@@ -94,6 +103,12 @@ def test_frontend_javascript_is_served():
     assert 'renderScenarioFields' in response.text
     assert 'dashboard-kpi' in response.text
     assert 'signal-card' in response.text
+    assert 'renderEquipmentSummary' in response.text
+    assert 'equipment-search' in response.text
+    assert 'equipment-category-filter' in response.text
+    assert 'equipment-task-filter' in response.text
+    assert 'renderScenarioEquipmentPlan' in response.text
+    assert 'scenario-budget-plan' in response.text
 
 
 
@@ -103,7 +118,7 @@ def test_equipment_library_endpoint_returns_catalog():
     data = response.json()
     assert data['version']
     assert data['items']
-    assert len(data['items']) >= 12
+    assert len(data['items']) >= 18
     first_item = data['items'][0]
     assert 'name' in first_item
     assert 'category' in first_item
@@ -113,6 +128,7 @@ def test_equipment_library_endpoint_returns_catalog():
     assert 'unit_cost_rmb' in first_item
     assert 'recommended_quantity' in first_item
     assert 'recommended_tasks' in first_item
+    assert len({item['category'] for item in data['items']}) >= 8
 
 
 def test_simulate_llm_endpoint_returns_enhanced_payload(monkeypatch):

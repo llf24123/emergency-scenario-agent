@@ -188,6 +188,20 @@
     .equipment-toolbar {
       display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
     }
+    .equipment-controls {
+      display: grid; gap: 12px; margin-bottom: 16px;
+    }
+    .equipment-filter-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+    }
+    .equipment-summary-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px;
+    }
+    .equipment-summary-card {
+      padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .equipment-summary-card .k { color: var(--soft); font-size: 12px; }
+    .equipment-summary-card .v { margin-top: 8px; font-size: 20px; font-weight: 700; }
     .equipment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .equipment-tags, .role-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
     .tag {
@@ -202,7 +216,7 @@
     .markdown { font-size: 13px; }
     .footer-note { color: var(--soft); font-size: 12px; }
     @media (max-width: 1200px) {
-      .product-shell, .hero, .layout, .meta-grid, .equipment-grid { grid-template-columns: 1fr; }
+      .product-shell, .hero, .layout, .meta-grid, .equipment-grid, .equipment-filter-grid, .equipment-summary-grid { grid-template-columns: 1fr; }
       .hero-grid, .status-board { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 760px) {
@@ -459,6 +473,45 @@
                 <select id="equipment-filter"></select>
                 <button type="button" class="ghost" id="show-recommended-equipment">只看当前推荐</button>
                 <button type="button" class="ghost" id="show-all-equipment">查看全部</button>
+              </div>
+            </div>
+            <div class="equipment-controls">
+              <div class="equipment-summary-grid">
+                <div class="equipment-summary-card"><div class="k">装备总数</div><div class="v" id="equipment-total-count">0</div></div>
+                <div class="equipment-summary-card"><div class="k">推荐投送数</div><div class="v" id="equipment-total-quantity">0</div></div>
+                <div class="equipment-summary-card"><div class="k">预算汇总</div><div class="v" id="equipment-total-budget">¥ 0</div></div>
+                <div class="equipment-summary-card"><div class="k">覆盖场景数</div><div class="v" id="equipment-covered-scenarios">0</div></div>
+              </div>
+              <div class="card" id="scenario-budget-plan" style="padding:16px; margin-bottom:16px;">
+                <div class="panel-title" style="margin-bottom:12px;"><h4 style="margin:0;">场景推荐清单</h4><span class="subtle" id="scenario-budget-total">等待推演生成预算方案</span></div>
+                <div class="meta-grid" style="margin-bottom:12px;">
+                  <div class="meta-box"><div class="k">场景</div><div class="v" id="scenario-budget-scenario">—</div></div>
+                  <div class="meta-box"><div class="k">推荐数量</div><div class="v" id="scenario-budget-quantity">0 台/套</div></div>
+                  <div class="meta-box"><div class="k">预算方案</div><div class="v" id="scenario-budget-amount">¥ 0</div></div>
+                </div>
+                <div class="subtle" style="margin-bottom:8px;">采购建议</div>
+                <ul class="list" id="scenario-budget-advice"></ul>
+              </div>
+              <div class="equipment-filter-grid">
+                <div>
+                  <label for="equipment-search">装备检索</label>
+                  <input id="equipment-search" placeholder="可搜名称、型号、能力、任务" />
+                </div>
+                <div>
+                  <label for="equipment-category-filter">类别筛选</label>
+                  <select id="equipment-category-filter"></select>
+                </div>
+                <div>
+                  <label for="equipment-task-filter">任务筛选</label>
+                  <select id="equipment-task-filter"></select>
+                </div>
+                <div>
+                  <label for="equipment-budget-mode">预算视角</label>
+                  <select id="equipment-budget-mode">
+                    <option value="recommended">按建议投送测算</option>
+                    <option value="inventory">按库存总值测算</option>
+                  </select>
+                </div>
               </div>
             </div>
             <div class="equipment-grid" id="equipment-grid"></div>

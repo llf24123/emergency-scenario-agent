@@ -13,6 +13,8 @@ from .models import (
     MarkdownReport,
     ResourcePlan,
     ScenarioCatalog,
+    ScenarioEquipmentBudgetPlan,
+    ScenarioEquipmentPlanItem,
     ScenarioInput,
     ScenarioSummary,
     SimulationReport,
@@ -250,6 +252,62 @@ EQUIPMENT_LIBRARY = [
         'unit_cost_rmb': 680000,
         'recommended_quantity': 1,
         'recommended_tasks': ['夜间搜救', '大面积停电保障', '坍塌现场照明'],
+    },
+    {
+        'id': 'water_rescue_boat',
+        'name': '水域救援机器人艇',
+        'category': '水域救援装备',
+        'summary': '适用于内涝、水库、河道和涵洞等复杂水域的快速抵近搜救与牵引转移。',
+        'supported_scenarios': ['flood_response'],
+        'capabilities': ['遥控救援牵引', '抛投救生圈', '复杂水域快速抵近'],
+        'deployment_roles': ['水域搜救', '受困人员牵引', '危险水域替代作业'],
+        'models': ['M40 水域救援机器人', 'JTT-SJ60'],
+        'inventory_count': 4,
+        'unit_cost_rmb': 158000,
+        'recommended_quantity': 2,
+        'recommended_tasks': ['积水区人员转移', '涵洞水域搜救', '抛投救援物资'],
+    },
+    {
+        'id': 'hydraulic_rescue_tool',
+        'name': '液压破拆工具组',
+        'category': '破拆救援装备',
+        'summary': '用于地震、交通与建筑坍塌场景的扩张、剪切、顶撑和入口开辟。',
+        'supported_scenarios': ['earthquake_rescue', 'high_rise_fire'],
+        'capabilities': ['液压剪扩钳', '破拆入口开辟', '顶撑与受限空间扩张'],
+        'deployment_roles': ['破拆通道开辟', '被困人员接近', '结构清障'],
+        'models': ['LUKAS eDRAULIC', 'Holmatro Pentheon'],
+        'inventory_count': 10,
+        'unit_cost_rmb': 126000,
+        'recommended_quantity': 2,
+        'recommended_tasks': ['坍塌区入口开辟', '门窗破拆', '狭小空间扩张'],
+    },
+    {
+        'id': 'all_terrain_vehicle',
+        'name': '全地形救援车',
+        'category': '机动投送平台',
+        'summary': '适用于地震废墟、泥泞道路和山区道路的人员物资快速投送。',
+        'supported_scenarios': ['earthquake_rescue', 'flood_response'],
+        'capabilities': ['复杂地形机动', '担架转运', '物资快速投送'],
+        'deployment_roles': ['前沿投送', '伤员转运', '补给机动'],
+        'models': ['BV206', 'Argo Aurora 950 SX-R'],
+        'inventory_count': 3,
+        'unit_cost_rmb': 860000,
+        'recommended_quantity': 1,
+        'recommended_tasks': ['废墟补给', '伤员转运', '山区道路快速机动'],
+    },
+    {
+        'id': 'portable_satellite_command',
+        'name': '便携卫星指挥站',
+        'category': '指挥通信系统',
+        'summary': '用于公网中断、跨区域增援和大范围灾害现场的卫星链路回传与移动指挥。',
+        'supported_scenarios': ['earthquake_rescue', 'flood_response', 'chemical_leak'],
+        'capabilities': ['卫星回传', '现场视频会商', '断网条件下移动指挥'],
+        'deployment_roles': ['应急指挥', '远程会商', '跨区域通信保障'],
+        'models': ['Inmarsat BGAN Explorer 710', '天通一号便携站'],
+        'inventory_count': 2,
+        'unit_cost_rmb': 420000,
+        'recommended_quantity': 1,
+        'recommended_tasks': ['断网现场回传', '跨区域会商', '应急指挥车补链'],
     },
 ]
 
@@ -519,6 +577,69 @@ class SimulationEngine:
             items=[EquipmentItem(**item) for item in EQUIPMENT_LIBRARY],
         )
 
+    def build_equipment_budget_plan(self, scenario: ScenarioInput, resource_plan: ResourcePlan) -> ScenarioEquipmentBudgetPlan:
+        equipment_items = [EquipmentItem(**item) for item in EQUIPMENT_LIBRARY]
+        id_map = {item.id: item for item in equipment_items}
+        name_map = {item.name: item for item in equipment_items}
+
+        selected: list[EquipmentItem] = []
+        seen_ids: set[str] = set()
+
+        for asset in resource_plan.recommended_assets:
+            item = id_map.get(asset) or name_map.get(asset)
+            if item and item.id not in seen_ids:
+                selected.append(item)
+                seen_ids.add(item.id)
+
+        scenario_candidates = [
+            item for item in equipment_items
+            if scenario.scenario_type in item.supported_scenarios and item.id not in seen_ids
+        ]
+        scenario_candidates.sort(key=lambda item: (-item.recommended_quantity, item.unit_cost_rmb))
+        for item in scenario_candidates[:3]:
+            selected.append(item)
+            seen_ids.add(item.id)
+
+        plan_items: list[ScenarioEquipmentPlanItem] = []
+        for item in selected:
+            estimated_budget = item.unit_cost_rmb * item.recommended_quantity
+            if item.id in scenario.available_resources:
+                reason = '当前场景已配置该装备，建议按推荐投送数量优先前置。'
+            elif scenario.scenario_type in item.supported_scenarios:
+                reason = f'适配{SCENARIO_LABELS[scenario.scenario_type]}场景，且覆盖任务：{ "、".join(item.recommended_tasks[:2]) }。'
+            else:
+                reason = '作为跨场景支援装备，用于补强当前方案的侦察、通信或救援能力。'
+            plan_items.append(
+                ScenarioEquipmentPlanItem(
+                    id=item.id,
+                    name=item.name,
+                    category=item.category,
+                    models=item.models,
+                    recommended_quantity=item.recommended_quantity,
+                    unit_cost_rmb=item.unit_cost_rmb,
+                    estimated_budget_rmb=estimated_budget,
+                    reason=reason,
+                    recommended_tasks=item.recommended_tasks,
+                )
+            )
+
+        total_quantity = sum(item.recommended_quantity for item in plan_items)
+        total_budget = sum(item.estimated_budget_rmb for item in plan_items)
+        procurement_advice = [
+            f'优先采购/前置总价占比最高的前 2 类装备，当前方案测算预算约 ¥ {total_budget:,}。',
+            '若以演练展示为主，可优先保留机器人、通信和侦察类装备，形成更完整的产品化展示链路。',
+            '若现有库存不足，建议先补足推荐投送数量，再扩展到备用轮换数量。',
+        ]
+
+        return ScenarioEquipmentBudgetPlan(
+            scenario_type=scenario.scenario_type,
+            scenario_type_label=SCENARIO_LABELS[scenario.scenario_type],
+            total_recommended_quantity=total_quantity,
+            total_estimated_budget_rmb=total_budget,
+            items=plan_items,
+            procurement_advice=procurement_advice,
+        )
+
     def run(self, scenario: ScenarioInput) -> SimulationReport:
         risks = self.risk_assessor.evaluate(scenario)
         strategy = self.strategy_agent.recommend(scenario, risks)
@@ -527,6 +648,7 @@ class SimulationEngine:
         communication_plan = self.communication_agent.build(scenario)
         timeline = self.timeline_agent.build(scenario)
         task_zones = self.task_zone_agent.build(scenario)
+        equipment_budget_plan = self.build_equipment_budget_plan(scenario, resource_plan)
 
         assumptions = [
             '默认当地消防救援力量可在常规响应时间内到场。',
@@ -550,6 +672,7 @@ class SimulationEngine:
             timeline=timeline,
             task_zones=task_zones,
             assumptions=assumptions,
+            equipment_budget_plan=equipment_budget_plan,
         )
 
     def run_with_llm(self, scenario: ScenarioInput) -> SimulationReport:
@@ -589,6 +712,16 @@ class SimulationEngine:
         if report.resource_plan.capability_gaps:
             sections.append('- 能力缺口：')
             sections.extend([f'  - {item}' for item in report.resource_plan.capability_gaps])
+        sections.extend(['', '## 场景推荐清单与预算方案'])
+        sections.append(f'- 推荐数量合计：{report.equipment_budget_plan.total_recommended_quantity} 台/套')
+        sections.append(f'- 预算测算：¥ {report.equipment_budget_plan.total_estimated_budget_rmb:,}')
+        sections.append('- 推荐清单：')
+        for item in report.equipment_budget_plan.items:
+            sections.append(
+                f'  - {item.name}｜{item.category}｜{item.recommended_quantity} 台/套｜¥ {item.estimated_budget_rmb:,}｜{item.reason}'
+            )
+        sections.append('- 采购建议：')
+        sections.extend([f'  - {item}' for item in report.equipment_budget_plan.procurement_advice])
         sections.extend(['', '## 通信保障'])
         sections.append(f'- 指挥模式：{report.communication_plan.command_mode}')
         sections.append(f'- 报送频率：{report.communication_plan.reporting_frequency}')

@@ -47,6 +47,20 @@ const taskZoneGrid = document.getElementById('task-zone-grid');
 const gapList = document.getElementById('gap-list');
 const equipmentFilter = document.getElementById('equipment-filter');
 const equipmentGrid = document.getElementById('equipment-grid');
+const equipmentSearch = document.getElementById('equipment-search');
+const equipmentCategoryFilter = document.getElementById('equipment-category-filter');
+const equipmentTaskFilter = document.getElementById('equipment-task-filter');
+const equipmentBudgetMode = document.getElementById('equipment-budget-mode');
+const equipmentTotalCount = document.getElementById('equipment-total-count');
+const equipmentTotalQuantity = document.getElementById('equipment-total-quantity');
+const equipmentTotalBudget = document.getElementById('equipment-total-budget');
+const equipmentCoveredScenarios = document.getElementById('equipment-covered-scenarios');
+const scenarioBudgetScenario = document.getElementById('scenario-budget-scenario');
+const scenarioBudgetQuantity = document.getElementById('scenario-budget-quantity');
+const scenarioBudgetAmount = document.getElementById('scenario-budget-amount');
+const scenarioBudgetTotal = document.getElementById('scenario-budget-total');
+const scenarioBudgetAdvice = document.getElementById('scenario-budget-advice');
+const scenarioBudgetPlan = document.getElementById('scenario-budget-plan');
 
 const highRiseExample = {
   scenario_type: 'high_rise_fire',
@@ -77,6 +91,7 @@ let latestReport = null;
 let latestEquipment = [];
 let catalogMap = {};
 let markdownCache = '';
+let equipmentMode = 'all';
 
 const severityOptions = [
   ['medium', '中等'],
@@ -396,6 +411,109 @@ function syncEquipmentFilter() {
   }
 }
 
+function populateSelect(selectEl, values, allLabel) {
+  selectEl.innerHTML = '';
+  const defaultOption = document.createElement('option');
+  defaultOption.value = 'all';
+  defaultOption.textContent = allLabel;
+  selectEl.appendChild(defaultOption);
+  values.forEach((value) => {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = value;
+    selectEl.appendChild(opt);
+  });
+}
+
+function renderEquipmentControls() {
+  const categories = [...new Set(latestEquipment.map((item) => item.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+  const tasks = [...new Set(latestEquipment.flatMap((item) => item.recommended_tasks || []).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+  populateSelect(equipmentCategoryFilter, categories, '全部类别');
+  populateSelect(equipmentTaskFilter, tasks, '全部任务');
+}
+
+function matchesEquipmentSearch(item, keyword) {
+  if (!keyword) return true;
+  const haystack = [
+    item.name,
+    item.id,
+    item.category,
+    item.summary,
+    ...(item.models || []),
+    ...(item.capabilities || []),
+    ...(item.deployment_roles || []),
+    ...(item.recommended_tasks || []),
+  ].join(' ').toLowerCase();
+  return haystack.includes(keyword.toLowerCase());
+}
+
+function getFilteredEquipment(mode = equipmentMode) {
+  const payload = latestPayload || highRiseExample;
+  const report = latestReport;
+  let items = [...latestEquipment];
+
+  if (mode === 'recommended' && report) {
+    const names = new Set(report.resource_plan.recommended_assets || []);
+    items = items.filter((item) => names.has(item.name) || names.has(item.id));
+  } else if (mode !== 'all') {
+    items = items.filter((item) => item.supported_scenarios.includes(mode));
+  } else if (payload?.scenario_type) {
+    items.sort((a, b) => {
+      const aScore = a.supported_scenarios.includes(payload.scenario_type) ? 1 : 0;
+      const bScore = b.supported_scenarios.includes(payload.scenario_type) ? 1 : 0;
+      return bScore - aScore;
+    });
+  }
+
+  const keyword = equipmentSearch.value.trim();
+  const category = equipmentCategoryFilter.value || 'all';
+  const task = equipmentTaskFilter.value || 'all';
+
+  if (keyword) {
+    items = items.filter((item) => matchesEquipmentSearch(item, keyword));
+  }
+  if (category !== 'all') {
+    items = items.filter((item) => item.category === category);
+  }
+  if (task !== 'all') {
+    items = items.filter((item) => (item.recommended_tasks || []).includes(task));
+  }
+
+  return items;
+}
+
+function renderEquipmentSummary(items) {
+  const scenarioSet = new Set(items.flatMap((item) => item.supported_scenarios || []));
+  const totalQuantity = items.reduce((sum, item) => sum + Number(item.recommended_quantity || 0), 0);
+  const budgetMultiplierField = equipmentBudgetMode.value === 'inventory' ? 'inventory_count' : 'recommended_quantity';
+  const totalBudget = items.reduce(
+    (sum, item) => sum + Number(item.unit_cost_rmb || 0) * Number(item[budgetMultiplierField] || 0),
+    0,
+  );
+
+  equipmentTotalCount.textContent = `${items.length} 条`;
+  equipmentTotalQuantity.textContent = `${totalQuantity} 台/套`;
+  equipmentTotalBudget.textContent = `¥ ${Number(totalBudget).toLocaleString('zh-CN')}`;
+  equipmentCoveredScenarios.textContent = `${scenarioSet.size} 类`;
+}
+
+function renderScenarioEquipmentPlan(plan) {
+  if (!plan) {
+    scenarioBudgetScenario.textContent = '—';
+    scenarioBudgetQuantity.textContent = '0 台/套';
+    scenarioBudgetAmount.textContent = '¥ 0';
+    scenarioBudgetTotal.textContent = '等待推演生成预算方案';
+    renderList(scenarioBudgetAdvice, []);
+    return;
+  }
+
+  scenarioBudgetScenario.textContent = plan.scenario_type_label || plan.scenario_type || '—';
+  scenarioBudgetQuantity.textContent = `${plan.total_recommended_quantity || 0} 台/套`;
+  scenarioBudgetAmount.textContent = `¥ ${Number(plan.total_estimated_budget_rmb || 0).toLocaleString('zh-CN')}`;
+  scenarioBudgetTotal.textContent = `共 ${plan.items?.length || 0} 类推荐装备`;
+  renderList(scenarioBudgetAdvice, plan.procurement_advice || []);
+}
+
 async function fetchCatalog() {
   const res = await fetch('/catalog');
   const data = await res.json();
@@ -430,27 +548,16 @@ async function fetchEquipmentLibrary() {
   const data = await res.json();
   latestEquipment = data.items || [];
   equipmentCount.textContent = `${latestEquipment.length} 条`;
+  renderEquipmentControls();
   renderEquipmentLibrary('all');
 }
 
-function renderEquipmentLibrary(mode = equipmentFilter.value || 'all') {
-  const payload = latestPayload || highRiseExample;
-  const report = latestReport;
-  let items = [...latestEquipment];
+function renderEquipmentLibrary(mode = equipmentMode) {
+  equipmentMode = mode;
+  let items = getFilteredEquipment(mode);
+  const planMap = new Map((latestReport?.equipment_budget_plan?.items || []).map((item) => [item.id, item]));
 
-  if (mode === 'recommended' && report) {
-    const names = new Set(report.resource_plan.recommended_assets || []);
-    items = items.filter((item) => names.has(item.name) || names.has(item.id));
-  } else if (mode !== 'all') {
-    items = items.filter((item) => item.supported_scenarios.includes(mode));
-  } else if (payload?.scenario_type) {
-    items.sort((a, b) => {
-      const aScore = a.supported_scenarios.includes(payload.scenario_type) ? 1 : 0;
-      const bScore = b.supported_scenarios.includes(payload.scenario_type) ? 1 : 0;
-      return bScore - aScore;
-    });
-  }
-
+  renderEquipmentSummary(items);
   equipmentGrid.innerHTML = '';
   items.forEach((item) => {
     const card = document.createElement('div');
@@ -460,6 +567,9 @@ function renderEquipmentLibrary(mode = equipmentFilter.value || 'all') {
     const capabilities = item.capabilities.map((cap) => `<li>${cap}</li>`).join('');
     const taskTags = (item.recommended_tasks || []).map((task) => `<span class="tag">${task}</span>`).join('');
     const modelText = (item.models || []).join(' / ');
+    const recommendedBudget = Number(item.unit_cost_rmb || 0) * Number(item.recommended_quantity || 0);
+    const planItem = planMap.get(item.id);
+    const reasonBlock = planItem?.reason ? `<div class="meta-box" style="margin-top:12px;"><div class="k">场景推荐原因</div><div class="v">${planItem.reason}</div></div>` : '';
     card.innerHTML = `
       <strong>${item.name}</strong>
       <div class="subtle">${item.category}</div>
@@ -471,14 +581,19 @@ function renderEquipmentLibrary(mode = equipmentFilter.value || 'all') {
         <div class="v">${modelText}<br>库存：${item.inventory_count} 台/套 · 建议投送：${item.recommended_quantity} 台/套</div>
       </div>
       <div class="meta-box" style="margin-top:12px;">
-        <div class="k">参考单价</div>
-        <div class="v">¥ ${Number(item.unit_cost_rmb || 0).toLocaleString('zh-CN')}</div>
+        <div class="k">参考单价 / 推荐预算</div>
+        <div class="v">¥ ${Number(item.unit_cost_rmb || 0).toLocaleString('zh-CN')}<br>建议预算：¥ ${recommendedBudget.toLocaleString('zh-CN')}</div>
       </div>
+      ${reasonBlock}
       <div class="role-tags" style="margin-top:12px;">${taskTags}</div>
       <ul class="list" style="margin-top:10px;">${capabilities}</ul>
     `;
     equipmentGrid.appendChild(card);
   });
+
+  if (!items.length) {
+    equipmentGrid.innerHTML = '<div class="equipment-card"><strong>暂无匹配装备</strong><div class="subtle">请调整搜索词、类别筛选或任务筛选条件。</div></div>';
+  }
 }
 
 function renderSituation(report, payload) {
@@ -582,6 +697,7 @@ async function simulate(payload) {
   markdownOutput.textContent = markdown.content;
   jsonOutput.textContent = JSON.stringify(report, null, 2);
   renderSituation(report, payload);
+  renderScenarioEquipmentPlan(report.equipment_budget_plan);
   renderEquipmentLibrary(equipmentFilter.value || payload.scenario_type || 'all');
   setStatus(useLLM.checked ? '推演完成，已尝试接入大模型增强。' : '规则推演完成。', true, false);
 }
@@ -624,12 +740,23 @@ document.getElementById('download-markdown').addEventListener('click', () => {
 
 document.getElementById('load-highrise').addEventListener('click', () => fillForm(highRiseExample));
 document.getElementById('load-chemical').addEventListener('click', () => fillForm(chemicalExample));
-document.getElementById('show-recommended-equipment').addEventListener('click', () => renderEquipmentLibrary('recommended'));
-document.getElementById('show-all-equipment').addEventListener('click', () => renderEquipmentLibrary('all'));
+document.getElementById('show-recommended-equipment').addEventListener('click', () => {
+  equipmentFilter.value = 'recommended';
+  renderEquipmentLibrary('recommended');
+});
+document.getElementById('show-all-equipment').addEventListener('click', () => {
+  equipmentFilter.value = 'all';
+  renderEquipmentLibrary('all');
+});
 equipmentFilter.addEventListener('change', (event) => renderEquipmentLibrary(event.target.value));
+equipmentSearch.addEventListener('input', () => renderEquipmentLibrary(equipmentFilter.value || equipmentMode || 'all'));
+equipmentCategoryFilter.addEventListener('change', () => renderEquipmentLibrary(equipmentFilter.value || equipmentMode || 'all'));
+equipmentTaskFilter.addEventListener('change', () => renderEquipmentLibrary(equipmentFilter.value || equipmentMode || 'all'));
+equipmentBudgetMode.addEventListener('change', () => renderEquipmentLibrary(equipmentFilter.value || equipmentMode || 'all'));
 scenarioSelect.addEventListener('change', () => {
   latestPayload = { ...latestPayload, scenario_type: scenarioSelect.value };
   updateScenarioSpecificFields(scenarioSelect.value);
+  equipmentFilter.value = scenarioSelect.value;
   renderEquipmentLibrary(scenarioSelect.value);
 });
 
