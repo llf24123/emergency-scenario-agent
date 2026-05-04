@@ -68,6 +68,8 @@ def test_frontend_homepage_is_served():
     assert '严重等级' in response.text
     assert '天气情况' in response.text
     assert '影响楼层 / 区域' in response.text
+    assert '场景专属引导' in response.text
+    assert '关键关注点' in response.text
 
 
 
@@ -80,6 +82,8 @@ def test_frontend_javascript_is_served():
     assert 'updateScenarioSpecificFields' in response.text
     assert 'weatherOptions' in response.text
     assert 'timeOfDayOptions' in response.text
+    assert 'scenarioProfiles' in response.text
+    assert 'scenario-guidance-title' in response.text
 
 
 

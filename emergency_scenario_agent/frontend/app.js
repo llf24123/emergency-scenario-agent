@@ -25,6 +25,9 @@ const llmCommandList = document.getElementById('llm-command-list');
 const llmResourceList = document.getElementById('llm-resource-list');
 const llmPublicList = document.getElementById('llm-public-list');
 const statusScenario = document.getElementById('status-scenario');
+const scenarioGuidanceTitle = document.getElementById('scenario-guidance-title');
+const scenarioGuidanceDesc = document.getElementById('scenario-guidance-desc');
+const scenarioFocusList = document.getElementById('scenario-focus-list');
 const heroPeople = document.getElementById('hero-people');
 const heroAffected = document.getElementById('hero-affected');
 const situationCommandMode = document.getElementById('situation-command-mode');
@@ -99,6 +102,39 @@ const scenarioFieldRules = {
   earthquake_rescue: { showFloors: false, floorsLabel: '重点区域（逗号分隔）', floorsPlaceholder: '1号楼东侧,地下空间' },
 };
 
+const scenarioProfiles = {
+  high_rise_fire: {
+    title: '高层火灾场景专属引导',
+    description: '重点关注起火楼层、烟气蔓延、人员疏散、供水排烟和通信中继。',
+    focus: ['优先填写受影响楼层', '关注是否停电、浓烟、电梯停运', '资源建议优先消防机器人、举高喷射车、自组网'],
+    defaults: { weather: 'windy', time_of_day: 'night', severity: 'high' },
+  },
+  chemical_leak: {
+    title: '危化泄漏场景专属引导',
+    description: '重点关注泄漏源、风向、污染扩散边界、堵漏与洗消闭环。',
+    focus: ['楼层字段自动隐藏', '建议填写重点区域而不是楼层', '资源建议优先危化处置组、洗消单元'],
+    defaults: { weather: 'rainy', time_of_day: 'night', severity: 'critical' },
+  },
+  flood_response: {
+    title: '城市内涝场景专属引导',
+    description: '重点关注积水区域、地下空间、受困车辆、排水与转移路线。',
+    focus: ['不需要填写影响楼层', '建议填写低洼路段、地下车库、隧道等区域', '天气通常与暴雨、大风、早晚高峰更相关'],
+    defaults: { weather: 'storm', time_of_day: 'rush_hour', severity: 'high' },
+  },
+  earthquake_rescue: {
+    title: '地震救援场景专属引导',
+    description: '重点关注倒塌区域、被困空间、余震风险、生命搜索与医疗转运。',
+    focus: ['不需要填写影响楼层', '建议填写楼栋、地下空间、坍塌点位', '优先关注搜索、破拆、转运协同'],
+    defaults: { weather: 'cloudy', time_of_day: 'afternoon', severity: 'high' },
+  },
+  subway_fire: {
+    title: '地铁火灾场景专属引导',
+    description: '重点关注站厅层、站台层、排烟组织、疏散路径和通信覆盖。',
+    focus: ['建议填写受影响站层', '优先关注烟气控制和客流疏散', '资源建议优先通信中继、无人机、照明设备'],
+    defaults: { weather: 'cloudy', time_of_day: 'rush_hour', severity: 'high' },
+  },
+};
+
 function setStatus(text, ok = false, err = false) {
   statusEl.textContent = text;
   statusEl.className = `status${ok ? ' ok' : ''}${err ? ' err' : ''}`;
@@ -126,11 +162,22 @@ function fillSelectOptions(selectEl, options, selectedValue) {
 
 function updateScenarioSpecificFields(scenarioType) {
   const rule = scenarioFieldRules[scenarioType] || { showFloors: true, floorsLabel: '影响区域（逗号分隔）', floorsPlaceholder: '' };
+  const profile = scenarioProfiles[scenarioType];
   floorsGroup.style.display = rule.showFloors ? 'block' : 'none';
   floorsLabel.textContent = rule.floorsLabel;
   form.floors_affected.placeholder = rule.floorsPlaceholder || '';
   if (!rule.showFloors) {
     form.floors_affected.value = '';
+  }
+  if (profile) {
+    scenarioGuidanceTitle.textContent = profile.title;
+    scenarioGuidanceDesc.textContent = profile.description;
+    renderList(scenarioFocusList, profile.focus || []);
+    if (profile.defaults) {
+      if (profile.defaults.severity) severitySelect.value = profile.defaults.severity;
+      if (profile.defaults.weather) weatherSelect.value = profile.defaults.weather;
+      if (profile.defaults.time_of_day) timeOfDaySelect.value = profile.defaults.time_of_day;
+    }
   }
 }
 

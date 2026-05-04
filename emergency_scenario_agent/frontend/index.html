@@ -275,6 +275,12 @@
             <input id="use_llm" name="use_llm" type="checkbox" checked />
             <label for="use_llm" style="margin:0;color:var(--text);">启用大模型增强（生成摘要 / 指挥简报 / 对外沟通建议）</label>
           </div>
+          <div class="card" style="padding:16px;">
+            <h4 id="scenario-guidance-title" style="margin:0 0 10px;">场景专属引导</h4>
+            <div id="scenario-guidance-desc" class="subtle" style="line-height:1.7; margin-bottom:10px;">根据场景自动切换更合适的填写方式。</div>
+            <div class="subtle" style="margin-bottom:8px;">关键关注点</div>
+            <ul class="list" id="scenario-focus-list"></ul>
+          </div>
           <div class="actions">
             <button type="submit" class="primary">生成推演报告</button>
             <button type="button" class="ghost" id="load-highrise">载入高层火灾示例</button>
