@@ -70,6 +70,9 @@ def test_frontend_homepage_is_served():
     assert '影响楼层 / 区域' in response.text
     assert '场景专属引导' in response.text
     assert '关键关注点' in response.text
+    assert '场景专属参数' in response.text
+    assert '积水深度' in response.text
+    assert '泄漏介质' in response.text
 
 
 
@@ -84,6 +87,8 @@ def test_frontend_javascript_is_served():
     assert 'timeOfDayOptions' in response.text
     assert 'scenarioProfiles' in response.text
     assert 'scenario-guidance-title' in response.text
+    assert 'buildScenarioSpecificPayload' in response.text
+    assert 'renderScenarioFields' in response.text
 
 
 

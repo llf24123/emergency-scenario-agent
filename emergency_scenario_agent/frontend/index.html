@@ -276,6 +276,11 @@
             <label for="use_llm" style="margin:0;color:var(--text);">启用大模型增强（生成摘要 / 指挥简报 / 对外沟通建议）</label>
           </div>
           <div class="card" style="padding:16px;">
+            <h4 style="margin:0 0 10px;">场景专属参数</h4>
+            <div class="subtle" style="line-height:1.7; margin-bottom:12px;">系统会根据场景自动切换更专业的输入项，并映射到推演引擎。示例参数包括：积水深度、泄漏介质、起火楼层、倒塌区域、疏散通道状态。</div>
+            <div id="scenario-specific-fields" class="form-grid"></div>
+          </div>
+          <div class="card" style="padding:16px;">
             <h4 id="scenario-guidance-title" style="margin:0 0 10px;">场景专属引导</h4>
             <div id="scenario-guidance-desc" class="subtle" style="line-height:1.7; margin-bottom:10px;">根据场景自动切换更合适的填写方式。</div>
             <div class="subtle" style="margin-bottom:8px;">关键关注点</div>
