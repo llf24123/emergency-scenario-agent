@@ -245,10 +245,14 @@ function updateSelectionInput(inputEl, values) {
 function renderSelectableChips(container, options, selectedValues, inputEl) {
   container.innerHTML = '';
   options.forEach(([value, label]) => {
-    const chip = document.createElement('label');
+    const chip = document.createElement('button');
+    chip.type = 'button';
     chip.className = `selection-chip${selectedValues.has(value) ? ' active' : ''}`;
-    chip.innerHTML = `<input type="checkbox" value="${value}" ${selectedValues.has(value) ? 'checked' : ''}><span>${label}</span>`;
-    chip.addEventListener('click', () => {
+    chip.dataset.value = value;
+    chip.setAttribute('aria-pressed', selectedValues.has(value) ? 'true' : 'false');
+    chip.innerHTML = `<span>${label}</span>`;
+    chip.addEventListener('click', (event) => {
+      event.preventDefault();
       const next = new Set(parseHiddenListValue(inputEl.value));
       if (next.has(value)) next.delete(value); else next.add(value);
       updateSelectionInput(inputEl, [...next]);

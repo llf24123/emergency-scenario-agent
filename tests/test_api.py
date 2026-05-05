@@ -117,6 +117,9 @@ def test_frontend_javascript_is_served():
     assert 'resourceOptions' in response.text
     assert 'toggleAdvancedResources' in response.text
     assert 'renderHazardOptions' in response.text
+    assert "document.createElement('button')" in response.text
+    assert "aria-pressed" in response.text
+    assert 'event.preventDefault()' in response.text
 
 
 
